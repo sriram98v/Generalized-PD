@@ -1,5 +1,32 @@
 use phylo::prelude::*;
 
+use std::{collections::HashSet, fmt::Display, ops::IndexMut};
+use num::{NumCast,Float,Signed,Zero};
+
+#[derive(Debug, Clone)]
+pub enum PDAttribute<T: Float + NumCast + Signed + Zero, U: Display> {
+    PD(Vec<T>),
+    EdgeCount(u32),
+    Set(HashSet<U>),
+}
+
+pub enum PDNodeAttributeType {
+    MinPD,
+    MinNormPD,
+    MinGenPD,
+    MaxPD,
+    MaxNormPD,
+    MaxGenPD,
+    EdgeCount,
+    Set
+}
+
+pub trait PDNodeAttributes<T: Float + NumCast + Signed + Zero, U: Display>:
+    IndexMut<PDNodeAttributeType, Output = PDAttribute<T, U>>
+{
+    fn reset(&mut self) {}
+}
+
 pub trait PhylogeneticDiversity {
     type Tree: RootedTree<Node: RootedWeightedNode>;
 
