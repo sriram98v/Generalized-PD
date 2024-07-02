@@ -28,7 +28,7 @@ impl<'a> PhylogeneticDiversity for TreePDMap<'a> {
     type Tree = SimpleRootedTree;
 
     fn get_tree(&self) -> &Self::Tree {
-        &self.tree
+        self.tree
     }
 
     fn precompute_minPDs(&mut self) {
@@ -126,7 +126,7 @@ impl<'a> PhylogeneticDiversity for TreePDMap<'a> {
             }
         }
 
-        return (delta_bar, delta_bar_sets, delta_hat, delta_hat_sets);
+        (delta_bar, delta_bar_sets, delta_hat, delta_hat_sets)
     }
 
     fn get_minPD(

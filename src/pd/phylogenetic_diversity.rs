@@ -49,7 +49,7 @@ pub trait PhylogeneticDiversity {
         let mut taxa_set: Vec<<<Self as PhylogeneticDiversity>::Tree as RootedTree>::NodeID> =
             vec![];
         self.backtrack_min(node_id, num_taxa, &mut taxa_set);
-        return taxa_set.into_iter();
+        taxa_set.into_iter()
     }
 
     fn get_minPD_taxa_set(
@@ -59,7 +59,7 @@ pub trait PhylogeneticDiversity {
         let mut taxa_set: Vec<<<Self as PhylogeneticDiversity>::Tree as RootedTree>::NodeID> =
             vec![];
         self.backtrack_min(self.get_tree().get_root_id(), num_taxa, &mut taxa_set);
-        return taxa_set.into_iter();
+        taxa_set.into_iter()
     }
 
     fn get_norm_minPD_taxa_set(
