@@ -21,7 +21,7 @@ cargo install --path=./
 ```
 
 ## Usage
-### Finding the min and min normalized PD for fixed taxa set
+### Finding the min and max normalized PD for fixed taxa set
 To compute the cophenetic distance between a pair of trees, please create a single file with the extension ```.tre``` containing the two trees in Newick format (line-separated). The run the following command to compute the cophenetic distance with depth as the path function:
 ```bash
 genpd PD min -f <PATH TO .TRE FILE> -n <NUM_TAXA>
@@ -32,7 +32,9 @@ Please refer the help page for details on how to use other path functions using:
 genpd PD min -h
 ```
 
-### Finding the min generalized PD
+for max replace ```min``` with ```max``` in the above commands
+
+### Finding the min and max generalized PD
 To compute the cophenetic distance between a pair of trees, please create a single file with the extension ```.tre``` containing the two trees in Newick format (line-separated). The run the following command to compute the cophenetic distance with depth as the path function:
 ```bash
 genpd gen min -f <PATH TO .TRE FILE>
@@ -42,3 +44,5 @@ Please refer the help page for details on how to use other path functions using:
 ```bash
 genpd gen min -h
 ```
+
+for max replace ```min``` with ```max``` in the above commands
