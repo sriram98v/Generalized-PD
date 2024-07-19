@@ -102,4 +102,73 @@ where
         node_id: TreeNodeID<'a, Self::Tree>,
         num_taxa: usize,
     ) -> TreeNodeWeight<'a, Self::Tree>;
+
+    fn precompute_maxPDs(&mut self);
+
+    fn compute_norm_max(
+        &self,
+    ) -> (
+        Vec<Vec<(f32, u32)>>,
+        Vec<Vec<Vec<usize>>>,
+        Vec<Vec<(f32, u32)>>,
+        Vec<Vec<Vec<usize>>>,
+    );
+
+    fn get_maxPD(
+        &self,
+        num_taxa: usize,
+    ) -> TreeNodeWeight<'a, Self::Tree>;
+
+    fn get_max_genPD(
+        &self,
+    ) -> TreeNodeWeight<'a, Self::Tree>;
+
+    fn get_max_genPD_set(
+        &self,
+    ) -> impl Iterator<Item = TreeNodeID<'a, Self::Tree>>;
+
+    fn get_norm_maxPD(
+        &self,
+        num_taxa: usize,
+    ) -> TreeNodeWeight<'a, Self::Tree>;
+
+    fn backtrack_max(
+        &self,
+        node_id: TreeNodeID<'a, Self::Tree>,
+        num_taxa: usize,
+        taxaset: &mut Vec<TreeNodeID<'a, Self::Tree>>,
+    );
+
+    fn get_maxPD_taxa_set_node(
+        &self,
+        node_id: TreeNodeID<'a, Self::Tree>,
+        num_taxa: usize,
+    ) -> impl Iterator<Item = TreeNodeID<'a, Self::Tree>> {
+        let mut taxa_set: Vec<TreeNodeID<'a, Self::Tree>> =
+            vec![];
+        self.backtrack_max(node_id, num_taxa, &mut taxa_set);
+        taxa_set.into_iter()
+    }
+
+    fn get_maxPD_taxa_set(
+        &self,
+        num_taxa: usize,
+    ) -> impl Iterator<Item = TreeNodeID<'a, Self::Tree>> {
+        let mut taxa_set: Vec<TreeNodeID<'a, Self::Tree>> =
+            vec![];
+        self.backtrack_max(self.get_tree().get_root_id(), num_taxa, &mut taxa_set);
+        taxa_set.into_iter()
+    }
+
+    fn get_norm_maxPD_taxa_set(
+        &self,
+        num_taxa: usize,
+    ) -> impl Iterator<Item = TreeNodeID<'a, Self::Tree>>;
+
+    fn get_maxPD_node(
+        &self,
+        node_id: TreeNodeID<'a, Self::Tree>,
+        num_taxa: usize,
+    ) -> TreeNodeWeight<'a, Self::Tree>;
+
 }

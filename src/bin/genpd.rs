@@ -30,7 +30,22 @@ fn main() {
                                 .required(true)
                                 .value_parser(clap::value_parser!(usize)),
                         ),
+                )
+                .subcommand(
+                    Command::new("max")
+                        .about("Compute maxPD")
+                        .arg(
+                            arg!(-f --file <TREE_FILE> "Input Tree File")
+                                .required(true)
+                                .value_parser(clap::value_parser!(String)),
+                        )
+                        .arg(
+                            arg!(-n --num_taxa <NUM_TAXA> "Input Tree File")
+                                .required(true)
+                                .value_parser(clap::value_parser!(usize)),
+                        ),
                 ),
+
         )
         .subcommand(
             Command::new("gen")
@@ -41,7 +56,15 @@ fn main() {
                             .required(true)
                             .value_parser(clap::value_parser!(String)),
                     ),
+                )
+                .subcommand(
+                    Command::new("max").about("Compute maxPD").arg(
+                        arg!(-f --file <TREE_FILE> "Input Tree File")
+                            .required(true)
+                            .value_parser(clap::value_parser!(String)),
+                    ),
                 ),
+
         )
         .about("CLI tool for quick tree operations")
         .get_matches();
@@ -74,7 +97,34 @@ fn main() {
                             .join(",")
                     );
                     // dbg!("{}", tree);
+                },
+                Some(("max", max_pd)) => {
+                    let mut tree_file =
+                        File::open(max_pd.get_one::<String>("file").expect("required")).unwrap();
+                    let num_taxa = max_pd.get_one::<usize>("num_taxa").expect("required");
+                    let mut trees = String::new();
+
+                    tree_file.read_to_string(&mut trees).unwrap();
+                    let tree_string = trees.split("\n").collect_vec()[0];
+                    let tree = SimpleRootedTree::from_newick(tree_string.as_bytes());
+                    let mut tree_pd = TreePDMap::new(&tree);
+                    tree_pd.precompute_maxPDs();
+                    println!(
+                        "maxPD: {}\nnormalized maxPD: {}\nmaxPD set:{}\nnormalized maxPD set:{}",
+                        tree_pd.get_maxPD(num_taxa.clone()),
+                        tree_pd.get_norm_maxPD(num_taxa.clone()),
+                        tree_pd
+                            .get_maxPD_taxa_set(num_taxa.clone())
+                            .map(|x| tree.get_node_taxa(x).unwrap())
+                            .join(","),
+                        tree_pd
+                            .get_norm_maxPD_taxa_set(num_taxa.clone())
+                            .map(|x| tree.get_node_taxa(x).unwrap())
+                            .join(",")
+                    );
+                    // dbg!("{}", tree);
                 }
+
                 _ => println!("No valid PD metric chosen! Refer help page (-h flag)"),
             }
         }
@@ -100,7 +150,28 @@ fn main() {
                         tree_pd.get_min_genPD_set().collect_vec().len()
                     );
                     // dbg!("{}", tree);
-                }
+                },
+                Some(("max", max_pd)) => {
+                    let mut tree_file =
+                        File::open(max_pd.get_one::<String>("file").expect("required")).unwrap();
+                    let mut trees = String::new();
+
+                    tree_file.read_to_string(&mut trees).unwrap();
+                    let tree_string = trees.split("\n").collect_vec()[0];
+                    let tree = SimpleRootedTree::from_newick(tree_string.as_bytes());
+                    let mut tree_pd = TreePDMap::new(&tree);
+                    tree_pd.precompute_maxPDs();
+                    println!(
+                        "maxGenPD: {}\nmaxGenPD set: {}\nmaxGenPD set size: {}",
+                        tree_pd.get_max_genPD(),
+                        tree_pd
+                            .get_max_genPD_set()
+                            .map(|x| tree.get_node_taxa(x).unwrap())
+                            .join(","),
+                        tree_pd.get_max_genPD_set().collect_vec().len()
+                    );
+                    // dbg!("{}", tree);
+                },
                 _ => println!("No valid PD metric chosen! Refer help page (-h flag)"),
             }
         }
