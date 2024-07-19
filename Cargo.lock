@@ -385,8 +385,9 @@ checksum = "830b246a0e5f20af87141b25c173cd1b609bd7779a4617d6ec582abaf90870f3"
 
 [[package]]
 name = "phylo"
-version = "0.1.0"
-source = "git+https://github.com/sriram98v/phylo-rs#b6f25ad80de352e2231dd5835789b2517eb147bd"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a0d83a17d258f171be5b41b0bb8399b46c752deb23b3a857ce766fb6734bb6e0"
 dependencies = [
  "anyhow",
  "fxhash",

@@ -27,8 +27,11 @@ pub trait PDNodeAttributes<T: Float + NumCast + Signed + Zero, U: Display>:
     fn reset(&mut self) {}
 }
 
-pub trait PhylogeneticDiversity {
-    type Tree: RootedTree<Node: RootedWeightedNode>;
+pub trait PhylogeneticDiversity<'a> 
+where
+    <Self::Tree as RootedTree<'a>>::Node: RootedTreeNode+RootedWeightedNode
+{
+    type Tree: RootedTree<'a>;
 
     fn precompute_minPDs(&mut self);
 
@@ -46,34 +49,34 @@ pub trait PhylogeneticDiversity {
     fn get_minPD(
         &self,
         num_taxa: usize,
-    ) -> <<<Self as PhylogeneticDiversity>::Tree as RootedTree>::Node as RootedWeightedNode>::Weight;
+    ) -> TreeNodeWeight<'a, Self::Tree>;
 
     fn get_min_genPD(
         &self,
-    ) -> <<<Self as PhylogeneticDiversity>::Tree as RootedTree>::Node as RootedWeightedNode>::Weight;
+    ) -> TreeNodeWeight<'a, Self::Tree>;
 
     fn get_min_genPD_set(
         &self,
-    ) -> impl Iterator<Item = <<Self as PhylogeneticDiversity>::Tree as RootedTree>::NodeID>;
+    ) -> impl Iterator<Item = TreeNodeID<'a, Self::Tree>>;
 
     fn get_norm_minPD(
         &self,
         num_taxa: usize,
-    ) -> <<<Self as PhylogeneticDiversity>::Tree as RootedTree>::Node as RootedWeightedNode>::Weight;
+    ) -> TreeNodeWeight<'a, Self::Tree>;
 
     fn backtrack_min(
         &self,
-        node_id: <<Self as PhylogeneticDiversity>::Tree as RootedTree>::NodeID,
+        node_id: TreeNodeID<'a, Self::Tree>,
         num_taxa: usize,
-        taxaset: &mut Vec<<<Self as PhylogeneticDiversity>::Tree as RootedTree>::NodeID>,
+        taxaset: &mut Vec<TreeNodeID<'a, Self::Tree>>,
     );
 
     fn get_minPD_taxa_set_node(
         &self,
-        node_id: <<Self as PhylogeneticDiversity>::Tree as RootedTree>::NodeID,
+        node_id: TreeNodeID<'a, Self::Tree>,
         num_taxa: usize,
-    ) -> impl Iterator<Item = <<Self as PhylogeneticDiversity>::Tree as RootedTree>::NodeID> {
-        let mut taxa_set: Vec<<<Self as PhylogeneticDiversity>::Tree as RootedTree>::NodeID> =
+    ) -> impl Iterator<Item = TreeNodeID<'a, Self::Tree>> {
+        let mut taxa_set: Vec<TreeNodeID<'a, Self::Tree>> =
             vec![];
         self.backtrack_min(node_id, num_taxa, &mut taxa_set);
         taxa_set.into_iter()
@@ -82,8 +85,8 @@ pub trait PhylogeneticDiversity {
     fn get_minPD_taxa_set(
         &self,
         num_taxa: usize,
-    ) -> impl Iterator<Item = <<Self as PhylogeneticDiversity>::Tree as RootedTree>::NodeID> {
-        let mut taxa_set: Vec<<<Self as PhylogeneticDiversity>::Tree as RootedTree>::NodeID> =
+    ) -> impl Iterator<Item = TreeNodeID<'a, Self::Tree>> {
+        let mut taxa_set: Vec<TreeNodeID<'a, Self::Tree>> =
             vec![];
         self.backtrack_min(self.get_tree().get_root_id(), num_taxa, &mut taxa_set);
         taxa_set.into_iter()
@@ -92,11 +95,11 @@ pub trait PhylogeneticDiversity {
     fn get_norm_minPD_taxa_set(
         &self,
         num_taxa: usize,
-    ) -> impl Iterator<Item = <<Self as PhylogeneticDiversity>::Tree as RootedTree>::NodeID>;
+    ) -> impl Iterator<Item = TreeNodeID<'a, Self::Tree>>;
 
     fn get_minPD_node(
         &self,
-        node_id: <<Self as PhylogeneticDiversity>::Tree as RootedTree>::NodeID,
+        node_id: TreeNodeID<'a, Self::Tree>,
         num_taxa: usize,
-    ) -> <<<Self as PhylogeneticDiversity>::Tree as RootedTree>::Node as RootedWeightedNode>::Weight;
+    ) -> TreeNodeWeight<'a, Self::Tree>;
 }

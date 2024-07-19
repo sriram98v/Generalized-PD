@@ -24,7 +24,7 @@ impl<'a> TreePDMap<'a> {
     }
 }
 
-impl<'a> PhylogeneticDiversity for TreePDMap<'a> {
+impl<'a> PhylogeneticDiversity<'a> for TreePDMap<'a> {
     type Tree = SimpleRootedTree;
 
     fn get_tree(&self) -> &Self::Tree {
@@ -68,9 +68,9 @@ impl<'a> PhylogeneticDiversity for TreePDMap<'a> {
             }
         }
 
-        for node in self.tree.postord(self.tree.get_root_id()) {
-            if !node.is_leaf() {
-                for i in 1..std::cmp::min(num_leaves, self.tree.get_cluster_size(node.get_id())) + 1
+        for node_id in self.tree.postord_ids(self.tree.get_root_id()) {
+            if !self.tree.is_leaf(node_id) {
+                for i in 1..std::cmp::min(num_leaves, self.tree.get_cluster_size(node_id)) + 1
                 {
                     let mut min_bar = f32::INFINITY;
                     let mut min_hat = f32::INFINITY;
@@ -78,7 +78,7 @@ impl<'a> PhylogeneticDiversity for TreePDMap<'a> {
                     let mut min_hat_set: Vec<usize> = vec![];
                     let mut min_e_bar = 0_u32;
                     let mut min_e_hat = 0_u32;
-                    let node_children = node.get_children().collect_vec();
+                    let node_children = self.tree.get_node_children_ids(node_id).collect_vec();
                     let x = node_children[0];
                     let y = node_children[1];
                     for r in 0..i + 1 {
@@ -118,10 +118,10 @@ impl<'a> PhylogeneticDiversity for TreePDMap<'a> {
                             min_hat_set = set;
                         }
                     }
-                    delta_bar[node.get_id()][i] = (min_bar, min_e_bar);
-                    delta_hat[node.get_id()][i] = (min_hat, min_e_hat);
-                    delta_bar_sets[node.get_id()][i] = min_bar_set;
-                    delta_hat_sets[node.get_id()][i] = min_hat_set;
+                    delta_bar[node_id][i] = (min_bar, min_e_bar);
+                    delta_hat[node_id][i] = (min_hat, min_e_hat);
+                    delta_bar_sets[node_id][i] = min_bar_set;
+                    delta_hat_sets[node_id][i] = min_hat_set;
                 }
             }
         }
@@ -132,7 +132,7 @@ impl<'a> PhylogeneticDiversity for TreePDMap<'a> {
     fn get_minPD(
         &self,
         num_taxa: usize,
-    ) -> <<<Self as PhylogeneticDiversity>::Tree as RootedTree>::Node as RootedWeightedNode>::Weight
+    ) -> TreeNodeWeight<'a, Self::Tree>
     {
         self.precomputed_min[self.tree.get_root_id()][std::cmp::min(num_taxa, self.tree.num_taxa())]
             .0
@@ -140,9 +140,9 @@ impl<'a> PhylogeneticDiversity for TreePDMap<'a> {
 
     fn get_minPD_node(
         &self,
-        node_id: <<Self as PhylogeneticDiversity>::Tree as RootedTree>::NodeID,
+        node_id: TreeNodeID<'a, Self::Tree>,
         num_taxa: usize,
-    ) -> <<<Self as PhylogeneticDiversity>::Tree as RootedTree>::Node as RootedWeightedNode>::Weight
+    ) -> TreeNodeWeight<'a, Self::Tree>
     {
         self.precomputed_min[node_id][std::cmp::min(num_taxa, self.tree.num_taxa())].0
     }
@@ -150,7 +150,7 @@ impl<'a> PhylogeneticDiversity for TreePDMap<'a> {
     fn get_norm_minPD(
         &self,
         num_taxa: usize,
-    ) -> <<<Self as PhylogeneticDiversity>::Tree as RootedTree>::Node as RootedWeightedNode>::Weight
+    ) -> TreeNodeWeight<'a, Self::Tree>
     {
         self.precomputed_norm_min[self.tree.get_root_id()]
             [std::cmp::min(num_taxa, self.tree.num_taxa())]
@@ -159,11 +159,11 @@ impl<'a> PhylogeneticDiversity for TreePDMap<'a> {
 
     fn backtrack_min(
         &self,
-        node_id: <<Self as PhylogeneticDiversity>::Tree as RootedTree>::NodeID,
+        node_id: TreeNodeID<'a, Self::Tree>,
         num_taxa: usize,
-        taxaset: &mut Vec<<<Self as PhylogeneticDiversity>::Tree as RootedTree>::NodeID>,
+        taxaset: &mut Vec<TreeNodeID<'a, Self::Tree>>,
     ) {
-        if self.tree.is_leaf(&node_id) {
+        if self.tree.is_leaf(node_id) {
             taxaset.push(node_id);
         } else {
             let node_children = self.tree.get_node_children_ids(node_id).collect_vec();
@@ -174,7 +174,7 @@ impl<'a> PhylogeneticDiversity for TreePDMap<'a> {
             if self.get_minPD_node(node_id, num_taxa)
                 == self.get_minPD_node(left_child_id, num_taxa) + left_edge_weight
             {
-                if self.tree.is_leaf(&left_child_id) {
+                if self.tree.is_leaf(left_child_id) {
                     taxaset.push(left_child_id);
                 } else {
                     self.backtrack_min(left_child_id, num_taxa, taxaset)
@@ -182,7 +182,7 @@ impl<'a> PhylogeneticDiversity for TreePDMap<'a> {
             } else if self.get_minPD_node(node_id, num_taxa)
                 == self.get_minPD_node(right_child_id, num_taxa) + right_edge_weight
             {
-                if self.tree.is_leaf(&right_child_id) {
+                if self.tree.is_leaf(right_child_id) {
                     taxaset.push(right_child_id);
                 } else {
                     self.backtrack_min(right_child_id, num_taxa, taxaset)
@@ -218,7 +218,7 @@ impl<'a> PhylogeneticDiversity for TreePDMap<'a> {
     fn get_minPD_taxa_set(
         &self,
         num_taxa: usize,
-    ) -> impl Iterator<Item = <<Self as PhylogeneticDiversity>::Tree as RootedTree>::NodeID> {
+    ) -> impl Iterator<Item = TreeNodeID<'a, Self::Tree>> {
         self.precomputed_min_set[self.tree.get_root_id()][num_taxa]
             .clone()
             .into_iter()
@@ -227,7 +227,7 @@ impl<'a> PhylogeneticDiversity for TreePDMap<'a> {
     fn get_norm_minPD_taxa_set(
         &self,
         num_taxa: usize,
-    ) -> impl Iterator<Item = <<Self as PhylogeneticDiversity>::Tree as RootedTree>::NodeID> {
+    ) -> impl Iterator<Item = TreeNodeID<'a, Self::Tree>> {
         self.precomputed_norm_min_set[self.tree.get_root_id()][num_taxa]
             .clone()
             .into_iter()
@@ -235,7 +235,7 @@ impl<'a> PhylogeneticDiversity for TreePDMap<'a> {
 
     fn get_min_genPD(
         &self,
-    ) -> <<<Self as PhylogeneticDiversity>::Tree as RootedTree>::Node as RootedWeightedNode>::Weight
+    ) -> TreeNodeWeight<'a, Self::Tree>
     {
         self.precomputed_norm_min[self.tree.get_root_id()]
             .iter()
@@ -247,7 +247,7 @@ impl<'a> PhylogeneticDiversity for TreePDMap<'a> {
 
     fn get_min_genPD_set(
         &self,
-    ) -> impl Iterator<Item = <<Self as PhylogeneticDiversity>::Tree as RootedTree>::NodeID> {
+    ) -> impl Iterator<Item = TreeNodeID<'a, Self::Tree>> {
         let num_taxa = self.precomputed_norm_min[self.tree.get_root_id()]
             .iter()
             .enumerate()
