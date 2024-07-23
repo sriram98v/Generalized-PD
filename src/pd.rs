@@ -65,14 +65,14 @@ impl<'a> PhylogeneticDiversity<'a> for TreePDMap<'a> {
         let mut delta_hat_sets: Vec<Vec<Vec<usize>>> =
             vec![vec![vec![]; num_leaves + 1]; self.tree.get_nodes().len()];
 
-        for node in self.tree.get_nodes() {
-            delta_bar[node.get_id()][0] = (0_f32, 0_u32);
-            delta_hat[node.get_id()][0] = (0_f32, 0_u32);
-            if node.is_leaf() {
-                delta_bar[node.get_id()][1] = (0_f32, 0_u32);
-                delta_hat[node.get_id()][1] = (0_f32, 0_u32);
-                delta_bar_sets[node.get_id()][1] = vec![node.get_id()];
-                delta_hat_sets[node.get_id()][1] = vec![node.get_id()];
+        for node_id in self.tree.get_node_ids() {
+            delta_bar[node_id][0] = (0_f32, 0_u32);
+            delta_hat[node_id][0] = (0_f32, 0_u32);
+            if self.tree.is_leaf(node_id){
+                delta_bar[node_id][1] = (0_f32, 0_u32);
+                delta_hat[node_id][1] = (0_f32, 0_u32);
+                delta_bar_sets[node_id][1] = vec![node_id];
+                delta_hat_sets[node_id][1] = vec![node_id];
             }
         }
 
@@ -294,20 +294,20 @@ impl<'a> PhylogeneticDiversity<'a> for TreePDMap<'a> {
         let mut delta_hat_sets: Vec<Vec<Vec<usize>>> =
             vec![vec![vec![]; num_leaves + 1]; self.tree.get_nodes().len()];
 
-        for node in self.tree.get_nodes() {
-            delta_bar[node.get_id()][0] = (0_f32, 0_u32);
-            delta_hat[node.get_id()][0] = (0_f32, 0_u32);
-            if node.is_leaf() {
-                delta_bar[node.get_id()][1] = (0_f32, 0_u32);
-                delta_hat[node.get_id()][1] = (0_f32, 0_u32);
-                delta_bar_sets[node.get_id()][1] = vec![node.get_id()];
-                delta_hat_sets[node.get_id()][1] = vec![node.get_id()];
+        for node_id in self.tree.get_node_ids() {
+            delta_bar[node_id][0] = (0_f32, 0_u32);
+            delta_hat[node_id][0] = (0_f32, 0_u32);
+            if self.tree.is_leaf(node_id) {
+                delta_bar[node_id][1] = (0_f32, 0_u32);
+                delta_hat[node_id][1] = (0_f32, 0_u32);
+                delta_bar_sets[node_id][1] = vec![node_id];
+                delta_hat_sets[node_id][1] = vec![node_id];
             }
         }
 
-        for node in self.tree.postord(self.tree.get_root_id()) {
-            if !node.is_leaf() {
-                for i in 1..std::cmp::max(num_leaves, self.tree.get_cluster_size(node.get_id())) + 1
+        for node_id in self.tree.postord_ids(self.tree.get_root_id()) {
+            if !self.tree.is_leaf(node_id) {
+                for i in 1..std::cmp::max(num_leaves, self.tree.get_cluster_size(node_id)) + 1
                 {
                     let mut max_bar = f32::INFINITY;
                     let mut max_hat = f32::INFINITY;
@@ -315,7 +315,7 @@ impl<'a> PhylogeneticDiversity<'a> for TreePDMap<'a> {
                     let mut max_hat_set: Vec<usize> = vec![];
                     let mut max_e_bar = 0_u32;
                     let mut max_e_hat = 0_u32;
-                    let node_children = node.get_children().collect_vec();
+                    let node_children = self.tree.get_node_children_ids(node_id).collect_vec();
                     let x = node_children[0];
                     let y = node_children[1];
                     for r in 0..i + 1 {
@@ -355,10 +355,10 @@ impl<'a> PhylogeneticDiversity<'a> for TreePDMap<'a> {
                             max_hat_set = set;
                         }
                     }
-                    delta_bar[node.get_id()][i] = (max_bar, max_e_bar);
-                    delta_hat[node.get_id()][i] = (max_hat, max_e_hat);
-                    delta_bar_sets[node.get_id()][i] = max_bar_set;
-                    delta_hat_sets[node.get_id()][i] = max_hat_set;
+                    delta_bar[node_id][i] = (max_bar, max_e_bar);
+                    delta_hat[node_id][i] = (max_hat, max_e_hat);
+                    delta_bar_sets[node_id][i] = max_bar_set;
+                    delta_hat_sets[node_id][i] = max_hat_set;
                 }
             }
         }
@@ -369,7 +369,7 @@ impl<'a> PhylogeneticDiversity<'a> for TreePDMap<'a> {
     fn get_maxPD(
         &self,
         num_taxa: usize,
-    ) -> <<<Self as PhylogeneticDiversity>::Tree as RootedTree>::Node as RootedWeightedNode>::Weight
+    ) -> TreeNodeWeight<'a, Self::Tree>
     {
         self.precomputed_max[self.tree.get_root_id()][std::cmp::max(num_taxa, 1)]
             .0
@@ -377,9 +377,9 @@ impl<'a> PhylogeneticDiversity<'a> for TreePDMap<'a> {
 
     fn get_maxPD_node(
         &self,
-        node_id: <<Self as PhylogeneticDiversity>::Tree as RootedTree>::NodeID,
+        node_id: TreeNodeID<'a, Self::Tree>,
         num_taxa: usize,
-    ) -> <<<Self as PhylogeneticDiversity>::Tree as RootedTree>::Node as RootedWeightedNode>::Weight
+    ) -> TreeNodeWeight<'a, Self::Tree>
     {
         self.precomputed_max[node_id][std::cmp::max(num_taxa, self.tree.num_taxa()-1)].0
     }
@@ -387,7 +387,7 @@ impl<'a> PhylogeneticDiversity<'a> for TreePDMap<'a> {
     fn get_norm_maxPD(
         &self,
         num_taxa: usize,
-    ) -> <<<Self as PhylogeneticDiversity>::Tree as RootedTree>::Node as RootedWeightedNode>::Weight
+    ) -> TreeNodeWeight<'a, Self::Tree>
     {
         self.precomputed_norm_max[self.tree.get_root_id()]
             [std::cmp::max(num_taxa, self.tree.num_taxa()-1)]
@@ -396,11 +396,11 @@ impl<'a> PhylogeneticDiversity<'a> for TreePDMap<'a> {
 
     fn backtrack_max(
         &self,
-        node_id: <<Self as PhylogeneticDiversity>::Tree as RootedTree>::NodeID,
+        node_id: TreeNodeID<'a, Self::Tree>,
         num_taxa: usize,
-        taxaset: &mut Vec<<<Self as PhylogeneticDiversity>::Tree as RootedTree>::NodeID>,
+        taxaset: &mut Vec<TreeNodeID<'a, Self::Tree>>,
     ) {
-        if self.tree.is_leaf(&node_id) {
+        if self.tree.is_leaf(node_id) {
             taxaset.push(node_id);
         } else {
             let node_children = self.tree.get_node_children_ids(node_id).collect_vec();
@@ -411,7 +411,7 @@ impl<'a> PhylogeneticDiversity<'a> for TreePDMap<'a> {
             if self.get_maxPD_node(node_id, num_taxa)
                 == self.get_maxPD_node(left_child_id, num_taxa) + left_edge_weight
             {
-                if self.tree.is_leaf(&left_child_id) {
+                if self.tree.is_leaf(left_child_id) {
                     taxaset.push(left_child_id);
                 } else {
                     self.backtrack_max(left_child_id, num_taxa, taxaset)
@@ -419,7 +419,7 @@ impl<'a> PhylogeneticDiversity<'a> for TreePDMap<'a> {
             } else if self.get_maxPD_node(node_id, num_taxa)
                 == self.get_maxPD_node(right_child_id, num_taxa) + right_edge_weight
             {
-                if self.tree.is_leaf(&right_child_id) {
+                if self.tree.is_leaf(right_child_id) {
                     taxaset.push(right_child_id);
                 } else {
                     self.backtrack_max(right_child_id, num_taxa, taxaset)
@@ -455,7 +455,7 @@ impl<'a> PhylogeneticDiversity<'a> for TreePDMap<'a> {
     fn get_maxPD_taxa_set(
         &self,
         num_taxa: usize,
-    ) -> impl Iterator<Item = <<Self as PhylogeneticDiversity>::Tree as RootedTree>::NodeID> {
+    ) -> impl Iterator<Item = TreeNodeID<'a, Self::Tree>> {
         self.precomputed_max_set[self.tree.get_root_id()][num_taxa]
             .clone()
             .into_iter()
@@ -464,7 +464,7 @@ impl<'a> PhylogeneticDiversity<'a> for TreePDMap<'a> {
     fn get_norm_maxPD_taxa_set(
         &self,
         num_taxa: usize,
-    ) -> impl Iterator<Item = <<Self as PhylogeneticDiversity>::Tree as RootedTree>::NodeID> {
+    ) -> impl Iterator<Item = TreeNodeID<'a, Self::Tree>> {
         self.precomputed_norm_max_set[self.tree.get_root_id()][num_taxa]
             .clone()
             .into_iter()
@@ -472,7 +472,7 @@ impl<'a> PhylogeneticDiversity<'a> for TreePDMap<'a> {
 
     fn get_max_genPD(
         &self,
-    ) -> <<<Self as PhylogeneticDiversity>::Tree as RootedTree>::Node as RootedWeightedNode>::Weight
+    ) -> TreeNodeWeight<'a, Self::Tree>
     {
         self.precomputed_norm_max[self.tree.get_root_id()]
             .iter()
@@ -484,7 +484,7 @@ impl<'a> PhylogeneticDiversity<'a> for TreePDMap<'a> {
 
     fn get_max_genPD_set(
         &self,
-    ) -> impl Iterator<Item = <<Self as PhylogeneticDiversity>::Tree as RootedTree>::NodeID> {
+    ) -> impl Iterator<Item = TreeNodeID<'a, Self::Tree>> {
         let num_taxa = self.precomputed_norm_max[self.tree.get_root_id()]
             .iter()
             .enumerate()
