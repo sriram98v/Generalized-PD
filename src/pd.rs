@@ -165,63 +165,63 @@ impl<'a> PhylogeneticDiversity<'a> for TreePDMap<'a> {
         .0
     }
 
-    fn backtrack_min(
-        &self,
-        node_id: TreeNodeID<'a, Self::Tree>,
-        num_taxa: usize,
-        taxaset: &mut Vec<TreeNodeID<'a, Self::Tree>>,
-    ) {
-        if self.tree.is_leaf(node_id) {
-            taxaset.push(node_id);
-        } else {
-            let node_children = self.tree.get_node_children_ids(node_id).collect_vec();
-            let left_child_id = node_children[0];
-            let right_child_id = node_children[1];
-            let left_edge_weight = self.tree.get_edge_weight(node_id, left_child_id).unwrap();
-            let right_edge_weight = self.tree.get_edge_weight(node_id, right_child_id).unwrap();
-            if self.get_minPD_node(node_id, num_taxa)
-                == self.get_minPD_node(left_child_id, num_taxa) + left_edge_weight
-            {
-                if self.tree.is_leaf(left_child_id) {
-                    taxaset.push(left_child_id);
-                } else {
-                    self.backtrack_min(left_child_id, num_taxa, taxaset)
-                }
-            } else if self.get_minPD_node(node_id, num_taxa)
-                == self.get_minPD_node(right_child_id, num_taxa) + right_edge_weight
-            {
-                if self.tree.is_leaf(right_child_id) {
-                    taxaset.push(right_child_id);
-                } else {
-                    self.backtrack_min(right_child_id, num_taxa, taxaset)
-                }
-            } else {
-                // the following line needs to be checked!
-                let ((left_pd, left_edges), (right_pd, right_edges)) = (1..num_taxa)
-                    .map(|l| (l, num_taxa - l))
-                    .map(|(l, r)| {
-                        (
-                            self.precomputed_min[left_child_id]
-                                [std::cmp::min(l, self.tree.num_taxa())],
-                            self.precomputed_min[right_child_id]
-                                [std::cmp::min(r, self.tree.num_taxa())],
-                        )
-                    })
-                    .filter(|(l, r)| l.0 != f32::INFINITY && r.0 != f32::INFINITY)
-                    // .inspect(|x| println!("{:?}", &x))
-                    .min_by(|x, y| (x.0 .0 + x.1 .0).total_cmp(&(y.0 .0 + y.1 .0)))
-                    .unwrap();
-                let num_left_taxa = (left_edges / 2) as usize + 1;
-                let num_right_taxa = (right_edges / 2) as usize + 1;
-                if num_left_taxa > 0 {
-                    self.backtrack_min(left_child_id, num_left_taxa, taxaset);
-                }
-                if num_right_taxa > 0 {
-                    self.backtrack_min(right_child_id, num_right_taxa, taxaset);
-                }
-            }
-        }
-    }
+    // fn backtrack_min(
+    //     &self,
+    //     node_id: TreeNodeID<'a, Self::Tree>,
+    //     num_taxa: usize,
+    //     taxaset: &mut Vec<TreeNodeID<'a, Self::Tree>>,
+    // ) {
+    //     if self.tree.is_leaf(node_id) {
+    //         taxaset.push(node_id);
+    //     } else {
+    //         let node_children = self.tree.get_node_children_ids(node_id).collect_vec();
+    //         let left_child_id = node_children[0];
+    //         let right_child_id = node_children[1];
+    //         let left_edge_weight = self.tree.get_edge_weight(node_id, left_child_id).unwrap();
+    //         let right_edge_weight = self.tree.get_edge_weight(node_id, right_child_id).unwrap();
+    //         if self.get_minPD_node(node_id, num_taxa)
+    //             == self.get_minPD_node(left_child_id, num_taxa) + left_edge_weight
+    //         {
+    //             if self.tree.is_leaf(left_child_id) {
+    //                 taxaset.push(left_child_id);
+    //             } else {
+    //                 self.backtrack_min(left_child_id, num_taxa, taxaset)
+    //             }
+    //         } else if self.get_minPD_node(node_id, num_taxa)
+    //             == self.get_minPD_node(right_child_id, num_taxa) + right_edge_weight
+    //         {
+    //             if self.tree.is_leaf(right_child_id) {
+    //                 taxaset.push(right_child_id);
+    //             } else {
+    //                 self.backtrack_min(right_child_id, num_taxa, taxaset)
+    //             }
+    //         } else {
+    //             // the following line needs to be checked!
+    //             let ((left_pd, left_edges), (right_pd, right_edges)) = (1..num_taxa)
+    //                 .map(|l| (l, num_taxa - l))
+    //                 .map(|(l, r)| {
+    //                     (
+    //                         self.precomputed_min[left_child_id]
+    //                             [std::cmp::min(l, self.tree.num_taxa())],
+    //                         self.precomputed_min[right_child_id]
+    //                             [std::cmp::min(r, self.tree.num_taxa())],
+    //                     )
+    //                 })
+    //                 .filter(|(l, r)| l.0 != f32::INFINITY && r.0 != f32::INFINITY)
+    //                 // .inspect(|x| println!("{:?}", &x))
+    //                 .min_by(|x, y| (x.0 .0 + x.1 .0).total_cmp(&(y.0 .0 + y.1 .0)))
+    //                 .unwrap();
+    //             let num_left_taxa = (left_edges / 2) as usize + 1;
+    //             let num_right_taxa = (right_edges / 2) as usize + 1;
+    //             if num_left_taxa > 0 {
+    //                 self.backtrack_min(left_child_id, num_left_taxa, taxaset);
+    //             }
+    //             if num_right_taxa > 0 {
+    //                 self.backtrack_min(right_child_id, num_right_taxa, taxaset);
+    //             }
+    //         }
+    //     }
+    // }
 
     fn get_minPD_taxa_set(
         &self,
@@ -331,7 +331,7 @@ impl<'a> PhylogeneticDiversity<'a> for TreePDMap<'a> {
                             + (self.tree.get_node(x).unwrap().get_weight().unwrap()
                                 * (std::cmp::max(l, 1) as f32));
                         let mut e = 0_u32;
-                        let mut set = vec![];
+                        let mut set: Vec<usize>;
                         if l == 0 {
                             e += delta_bar[y][r].1 + 1;
                             set = delta_bar_sets[y][r].clone();
@@ -394,63 +394,63 @@ impl<'a> PhylogeneticDiversity<'a> for TreePDMap<'a> {
         .0
     }
 
-    fn backtrack_max(
-        &self,
-        node_id: TreeNodeID<'a, Self::Tree>,
-        num_taxa: usize,
-        taxaset: &mut Vec<TreeNodeID<'a, Self::Tree>>,
-    ) {
-        if self.tree.is_leaf(node_id) {
-            taxaset.push(node_id);
-        } else {
-            let node_children = self.tree.get_node_children_ids(node_id).collect_vec();
-            let left_child_id = node_children[0];
-            let right_child_id = node_children[1];
-            let left_edge_weight = self.tree.get_edge_weight(node_id, left_child_id).unwrap();
-            let right_edge_weight = self.tree.get_edge_weight(node_id, right_child_id).unwrap();
-            if self.get_maxPD_node(node_id, num_taxa)
-                == self.get_maxPD_node(left_child_id, num_taxa) + left_edge_weight
-            {
-                if self.tree.is_leaf(left_child_id) {
-                    taxaset.push(left_child_id);
-                } else {
-                    self.backtrack_max(left_child_id, num_taxa, taxaset)
-                }
-            } else if self.get_maxPD_node(node_id, num_taxa)
-                == self.get_maxPD_node(right_child_id, num_taxa) + right_edge_weight
-            {
-                if self.tree.is_leaf(right_child_id) {
-                    taxaset.push(right_child_id);
-                } else {
-                    self.backtrack_max(right_child_id, num_taxa, taxaset)
-                }
-            } else {
-                // the following line needs to be checked!
-                let ((left_pd, left_edges), (right_pd, right_edges)) = (1..num_taxa)
-                    .map(|l| (l, num_taxa - l))
-                    .map(|(l, r)| {
-                        (
-                            self.precomputed_max[left_child_id]
-                                [std::cmp::max(l, self.tree.num_taxa())],
-                            self.precomputed_max[right_child_id]
-                                [std::cmp::max(r, self.tree.num_taxa())],
-                        )
-                    })
-                    .filter(|(l, r)| l.0 != f32::INFINITY && r.0 != f32::INFINITY)
-                    // .inspect(|x| println!("{:?}", &x))
-                    .max_by(|x, y| (x.0 .0 + x.1 .0).total_cmp(&(y.0 .0 + y.1 .0)))
-                    .unwrap();
-                let num_left_taxa = (left_edges / 2) as usize + 1;
-                let num_right_taxa = (right_edges / 2) as usize + 1;
-                if num_left_taxa > 0 {
-                    self.backtrack_max(left_child_id, num_left_taxa, taxaset);
-                }
-                if num_right_taxa > 0 {
-                    self.backtrack_max(right_child_id, num_right_taxa, taxaset);
-                }
-            }
-        }
-    }
+    // fn backtrack_max(
+    //     &self,
+    //     node_id: TreeNodeID<'a, Self::Tree>,
+    //     num_taxa: usize,
+    //     taxaset: &mut Vec<TreeNodeID<'a, Self::Tree>>,
+    // ) {
+    //     if self.tree.is_leaf(node_id) {
+    //         taxaset.push(node_id);
+    //     } else {
+    //         let node_children = self.tree.get_node_children_ids(node_id).collect_vec();
+    //         let left_child_id = node_children[0];
+    //         let right_child_id = node_children[1];
+    //         let left_edge_weight = self.tree.get_edge_weight(node_id, left_child_id).unwrap();
+    //         let right_edge_weight = self.tree.get_edge_weight(node_id, right_child_id).unwrap();
+    //         if self.get_maxPD_node(node_id, num_taxa)
+    //             == self.get_maxPD_node(left_child_id, num_taxa) + left_edge_weight
+    //         {
+    //             if self.tree.is_leaf(left_child_id) {
+    //                 taxaset.push(left_child_id);
+    //             } else {
+    //                 self.backtrack_max(left_child_id, num_taxa, taxaset)
+    //             }
+    //         } else if self.get_maxPD_node(node_id, num_taxa)
+    //             == self.get_maxPD_node(right_child_id, num_taxa) + right_edge_weight
+    //         {
+    //             if self.tree.is_leaf(right_child_id) {
+    //                 taxaset.push(right_child_id);
+    //             } else {
+    //                 self.backtrack_max(right_child_id, num_taxa, taxaset)
+    //             }
+    //         } else {
+    //             // the following line needs to be checked!
+    //             let ((left_pd, left_edges), (right_pd, right_edges)) = (1..num_taxa)
+    //                 .map(|l| (l, num_taxa - l))
+    //                 .map(|(l, r)| {
+    //                     (
+    //                         self.precomputed_max[left_child_id]
+    //                             [std::cmp::max(l, self.tree.num_taxa())],
+    //                         self.precomputed_max[right_child_id]
+    //                             [std::cmp::max(r, self.tree.num_taxa())],
+    //                     )
+    //                 })
+    //                 .filter(|(l, r)| l.0 != f32::INFINITY && r.0 != f32::INFINITY)
+    //                 // .inspect(|x| println!("{:?}", &x))
+    //                 .max_by(|x, y| (x.0 .0 + x.1 .0).total_cmp(&(y.0 .0 + y.1 .0)))
+    //                 .unwrap();
+    //             let num_left_taxa = (left_edges / 2) as usize + 1;
+    //             let num_right_taxa = (right_edges / 2) as usize + 1;
+    //             if num_left_taxa > 0 {
+    //                 self.backtrack_max(left_child_id, num_left_taxa, taxaset);
+    //             }
+    //             if num_right_taxa > 0 {
+    //                 self.backtrack_max(right_child_id, num_right_taxa, taxaset);
+    //             }
+    //         }
+    //     }
+    // }
 
     fn get_maxPD_taxa_set(
         &self,

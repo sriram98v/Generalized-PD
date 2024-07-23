@@ -64,33 +64,10 @@ where
         num_taxa: usize,
     ) -> TreeNodeWeight<'a, Self::Tree>;
 
-    fn backtrack_min(
-        &self,
-        node_id: TreeNodeID<'a, Self::Tree>,
-        num_taxa: usize,
-        taxaset: &mut Vec<TreeNodeID<'a, Self::Tree>>,
-    );
-
-    fn get_minPD_taxa_set_node(
-        &self,
-        node_id: TreeNodeID<'a, Self::Tree>,
-        num_taxa: usize,
-    ) -> impl Iterator<Item = TreeNodeID<'a, Self::Tree>> {
-        let mut taxa_set: Vec<TreeNodeID<'a, Self::Tree>> =
-            vec![];
-        self.backtrack_min(node_id, num_taxa, &mut taxa_set);
-        taxa_set.into_iter()
-    }
-
     fn get_minPD_taxa_set(
         &self,
         num_taxa: usize,
-    ) -> impl Iterator<Item = TreeNodeID<'a, Self::Tree>> {
-        let mut taxa_set: Vec<TreeNodeID<'a, Self::Tree>> =
-            vec![];
-        self.backtrack_min(self.get_tree().get_root_id(), num_taxa, &mut taxa_set);
-        taxa_set.into_iter()
-    }
+    ) -> impl Iterator<Item = TreeNodeID<'a, Self::Tree>>;
 
     fn get_norm_minPD_taxa_set(
         &self,
@@ -132,33 +109,10 @@ where
         num_taxa: usize,
     ) -> TreeNodeWeight<'a, Self::Tree>;
 
-    fn backtrack_max(
-        &self,
-        node_id: TreeNodeID<'a, Self::Tree>,
-        num_taxa: usize,
-        taxaset: &mut Vec<TreeNodeID<'a, Self::Tree>>,
-    );
-
-    fn get_maxPD_taxa_set_node(
-        &self,
-        node_id: TreeNodeID<'a, Self::Tree>,
-        num_taxa: usize,
-    ) -> impl Iterator<Item = TreeNodeID<'a, Self::Tree>> {
-        let mut taxa_set: Vec<TreeNodeID<'a, Self::Tree>> =
-            vec![];
-        self.backtrack_max(node_id, num_taxa, &mut taxa_set);
-        taxa_set.into_iter()
-    }
-
     fn get_maxPD_taxa_set(
         &self,
         num_taxa: usize,
-    ) -> impl Iterator<Item = TreeNodeID<'a, Self::Tree>> {
-        let mut taxa_set: Vec<TreeNodeID<'a, Self::Tree>> =
-            vec![];
-        self.backtrack_max(self.get_tree().get_root_id(), num_taxa, &mut taxa_set);
-        taxa_set.into_iter()
-    }
+    ) -> impl Iterator<Item = TreeNodeID<'a, Self::Tree>>;
 
     fn get_norm_maxPD_taxa_set(
         &self,
