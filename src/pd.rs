@@ -78,13 +78,19 @@ impl<'a> PhylogeneticDiversity<'a> for TreePDMap<'a> {
 
         for node_id in self.tree.postord_ids(self.tree.get_root_id()) {
             if !self.tree.is_leaf(node_id) {
-                for i in 1..std::cmp::min(num_leaves, self.tree.get_cluster_size(node_id)) + 1
+                for i in 1..(std::cmp::min(num_leaves, self.tree.get_cluster_size(node_id)) + 1)
                 {
-                    let mut min_bar = f32::INFINITY;
-                    let mut min_hat = f32::INFINITY;
+                    // Min pd
+                    let mut min_bar = f32::MAX;
+                    // Min norm pd
+                    let mut min_hat = f32::MAX;
+                    // min pd set
                     let mut min_bar_set: Vec<usize> = vec![];
+                    // min norm pd set
                     let mut min_hat_set: Vec<usize> = vec![];
+                    // min pd edge_count
                     let mut min_e_bar = 0_u32;
+                    // min norm pd edge count
                     let mut min_e_hat = 0_u32;
                     let node_children = self.tree.get_node_children_ids(node_id).collect_vec();
                     let x = node_children[0];
@@ -251,8 +257,8 @@ impl<'a> PhylogeneticDiversity<'a> for TreePDMap<'a> {
             if !self.tree.is_leaf(node_id) {
                 for i in 1..std::cmp::max(num_leaves, self.tree.get_cluster_size(node_id)) + 1
                 {
-                    let mut max_bar = f32::INFINITY;
-                    let mut max_hat = f32::INFINITY;
+                    let mut max_bar = 0_f32;
+                    let mut max_hat = 0_f32;
                     let mut max_bar_set: Vec<usize> = vec![];
                     let mut max_hat_set: Vec<usize> = vec![];
                     let mut max_e_bar = 0_u32;
@@ -268,10 +274,10 @@ impl<'a> PhylogeneticDiversity<'a> for TreePDMap<'a> {
                         }
                         let val_bar = delta_bar[y][r].0
                             + (self.tree.get_node(y).unwrap().get_weight().unwrap()
-                                * (std::cmp::max(r, 1) as f32))
+                                * (std::cmp::min(r, 1) as f32))
                             + delta_bar[x][l].0
                             + (self.tree.get_node(x).unwrap().get_weight().unwrap()
-                                * (std::cmp::max(l, 1) as f32));
+                                * (std::cmp::min(l, 1) as f32));
                         let mut e = 0_u32;
                         let mut set: Vec<usize>;
                         if l == 0 {
@@ -286,12 +292,12 @@ impl<'a> PhylogeneticDiversity<'a> for TreePDMap<'a> {
                             set.extend(delta_bar_sets[y][r].clone());
                         }
                         let val_hat = val_bar / (e as f32);
-                        if val_bar < max_bar {
+                        if val_bar > max_bar {
                             max_bar = val_bar;
                             max_e_bar = e;
                             max_bar_set = set.clone();
                         }
-                        if val_hat < max_hat {
+                        if val_hat > max_hat {
                             max_hat = val_hat;
                             max_e_hat = e;
                             max_hat_set = set;

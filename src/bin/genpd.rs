@@ -2,6 +2,7 @@ extern crate clap;
 
 use clap::{arg, Command};
 use itertools::Itertools;
+use phylo::prelude::RootedTree;
 use phylo::tree::io::Newick;
 use phylo::tree::simple_rtree::RootedMetaTree;
 use phylo::tree::SimpleRootedTree;
@@ -9,8 +10,9 @@ use std::fs::File;
 use std::io::Read;
 use PD::pd::phylogenetic_diversity::PhylogeneticDiversity;
 use PD::pd::TreePDMap;
+use anyhow::Result;
 
-fn main() {
+fn main() -> Result<()>{
     let matches = Command::new("Phylogenetics Rust")
         .version("1.0")
         .author("Sriram Vijendran <vijendran.sriram@gmail.com>")
@@ -74,13 +76,16 @@ fn main() {
             match sub_m.subcommand() {
                 Some(("min", min_pd)) => {
                     let mut tree_file =
-                        File::open(min_pd.get_one::<String>("file").expect("required")).unwrap();
+                        File::open(min_pd.get_one::<String>("file").expect("required"))?;
                     let num_taxa = min_pd.get_one::<usize>("num_taxa").expect("required");
                     let mut trees = String::new();
 
                     tree_file.read_to_string(&mut trees).unwrap();
                     let tree_string = trees.split("\n").collect_vec()[0];
-                    let tree = SimpleRootedTree::from_newick(tree_string.as_bytes());
+                    let tree = SimpleRootedTree::from_newick(tree_string.as_bytes())?;
+                    if !tree.is_binary(){
+                        panic!("Input tree is not binary!");
+                    }
                     let mut tree_pd = TreePDMap::new(&tree);
                     tree_pd.precompute_minPDs();
                     println!(
@@ -100,13 +105,17 @@ fn main() {
                 },
                 Some(("max", max_pd)) => {
                     let mut tree_file =
-                        File::open(max_pd.get_one::<String>("file").expect("required")).unwrap();
+                        File::open(max_pd.get_one::<String>("file").expect("required"))?;
                     let num_taxa = max_pd.get_one::<usize>("num_taxa").expect("required");
                     let mut trees = String::new();
 
                     tree_file.read_to_string(&mut trees).unwrap();
                     let tree_string = trees.split("\n").collect_vec()[0];
-                    let tree = SimpleRootedTree::from_newick(tree_string.as_bytes());
+                    let tree = SimpleRootedTree::from_newick(tree_string.as_bytes())?;
+                    if !tree.is_binary(){
+                        panic!("Input tree is not binary!");
+                    }
+
                     let mut tree_pd = TreePDMap::new(&tree);
                     tree_pd.precompute_maxPDs();
                     println!(
@@ -132,12 +141,16 @@ fn main() {
             match sub_m.subcommand() {
                 Some(("min", min_pd)) => {
                     let mut tree_file =
-                        File::open(min_pd.get_one::<String>("file").expect("required")).unwrap();
+                        File::open(min_pd.get_one::<String>("file").expect("required"))?;
                     let mut trees = String::new();
 
                     tree_file.read_to_string(&mut trees).unwrap();
                     let tree_string = trees.split("\n").collect_vec()[0];
-                    let tree = SimpleRootedTree::from_newick(tree_string.as_bytes());
+                    let tree = SimpleRootedTree::from_newick(tree_string.as_bytes())?;
+                    if !tree.is_binary(){
+                        panic!("Input tree is not binary!");
+                    }
+
                     let mut tree_pd = TreePDMap::new(&tree);
                     tree_pd.precompute_minPDs();
                     println!(
@@ -153,12 +166,16 @@ fn main() {
                 },
                 Some(("max", max_pd)) => {
                     let mut tree_file =
-                        File::open(max_pd.get_one::<String>("file").expect("required")).unwrap();
+                        File::open(max_pd.get_one::<String>("file").expect("required"))?;
                     let mut trees = String::new();
 
                     tree_file.read_to_string(&mut trees).unwrap();
                     let tree_string = trees.split("\n").collect_vec()[0];
-                    let tree = SimpleRootedTree::from_newick(tree_string.as_bytes());
+                    let tree = SimpleRootedTree::from_newick(tree_string.as_bytes())?;
+                    if !tree.is_binary(){
+                        panic!("Input tree is not binary!");
+                    }
+
                     let mut tree_pd = TreePDMap::new(&tree);
                     tree_pd.precompute_maxPDs();
                     println!(
@@ -178,5 +195,6 @@ fn main() {
         _ => {
             println!("No option selected! Refer help page (-h flag)");
         }
-    }
+    };
+    Ok(())
 }
