@@ -1,7 +1,6 @@
 use phylo::prelude::*;
 
-use std::{cmp::Ordering, fmt::Display, ops::IndexMut};
-use num::{NumCast,Float,Signed,Zero};
+use std::cmp::Ordering;
 
 pub trait TreePDMap<'a>
 where 
@@ -83,26 +82,26 @@ where
 
 }
 
-pub trait PhylogeneticDiversity: for<'a> RootedWeightedTree<'a>
+pub trait PhylogeneticDiversity: for<'a> RootedWeightedTree<'a>+ for <'a> Clusters<'a>
 where 
     for <'a> <Self as RootedTree<'a>>::Node: RootedWeightedNode
 {
     fn compute_dp_table<'a>(
         &self,
-        op: std::cmp::Ordering,
+        op: Ordering,
     ) -> (
-        Vec<Vec<(f32, u32)>>,
+        Vec<Vec<(TreeNodeWeight<'a, Self>, u32)>>,
         Vec<Vec<Vec<TreeNodeID<'a, Self>>>>,
-        Vec<Vec<(f32, u32)>>,
+        Vec<Vec<(TreeNodeWeight<'a, Self>, u32)>>,
         Vec<Vec<Vec<TreeNodeID<'a, Self>>>>,
     );
 
     fn compute_norm_min<'a>(
         &self,
     ) -> (
-        Vec<Vec<(f32, u32)>>,
+        Vec<Vec<(TreeNodeWeight<'a, Self>, u32)>>,
         Vec<Vec<Vec<TreeNodeID<'a, Self>>>>,
-        Vec<Vec<(f32, u32)>>,
+        Vec<Vec<(TreeNodeWeight<'a, Self>, u32)>>,
         Vec<Vec<Vec<TreeNodeID<'a, Self>>>>,
     ) {
         self.compute_dp_table(Ordering::Less)
@@ -111,9 +110,9 @@ where
     fn compute_norm_max<'a>(
         &self,
     ) -> (
-        Vec<Vec<(f32, u32)>>,
+        Vec<Vec<(TreeNodeWeight<'a, Self>, u32)>>,
         Vec<Vec<Vec<TreeNodeID<'a, Self>>>>,
-        Vec<Vec<(f32, u32)>>,
+        Vec<Vec<(TreeNodeWeight<'a, Self>, u32)>>,
         Vec<Vec<Vec<TreeNodeID<'a, Self>>>>,
     ) {
         self.compute_dp_table(Ordering::Greater)

@@ -149,7 +149,7 @@ fn main() -> Result<()>{
                         panic!("Input tree is not binary!");
                     }
 
-                    let mut tree_pd = TreePD::new(&tree);
+                    let tree_pd = TreePD::new(&tree);
                     println!(
                         "minGenPD: {}\nminGenPD set: {}\nminGenPD set size: {}",
                         tree_pd.get_min_genPD(),
@@ -173,7 +173,7 @@ fn main() -> Result<()>{
                         panic!("Input tree is not binary!");
                     }
 
-                    let mut tree_pd = TreePD::new(&tree);
+                    let tree_pd = TreePD::new(&tree);
                     println!(
                         "maxGenPD: {}\nmaxGenPD set: {}\nmaxGenPD set size: {}",
                         tree_pd.get_max_genPD(),
