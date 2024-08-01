@@ -84,7 +84,9 @@ fn main() -> Result<()>{
                     let tree_string = trees.split("\n").collect_vec()[0];
                     let tree = SimpleRootedTree::from_newick(tree_string.as_bytes())?;
                     if !tree.is_binary(){
-                        panic!("Input tree is not binary!");
+                        eprintln!("Input tree is not binary!");
+                        std::process::exit(exitcode::USAGE);
+
                     }
                     let tree_pd = TreePD::new(&tree);
                     println!(
@@ -112,7 +114,9 @@ fn main() -> Result<()>{
                     let tree_string = trees.split("\n").collect_vec()[0];
                     let tree = SimpleRootedTree::from_newick(tree_string.as_bytes())?;
                     if !tree.is_binary(){
-                        panic!("Input tree is not binary!");
+                        eprintln!("Input tree is not binary!");
+                        std::process::exit(exitcode::USAGE);
+
                     }
 
                     let tree_pd = TreePD::new(&tree);
@@ -146,7 +150,9 @@ fn main() -> Result<()>{
                     let tree_string = trees.split("\n").collect_vec()[0];
                     let tree = SimpleRootedTree::from_newick(tree_string.as_bytes())?;
                     if !tree.is_binary(){
-                        panic!("Input tree is not binary!");
+                        eprintln!("Input tree is not binary!");
+                        std::process::exit(exitcode::USAGE);
+
                     }
 
                     let tree_pd = TreePD::new(&tree);
@@ -170,7 +176,8 @@ fn main() -> Result<()>{
                     let tree_string = trees.split("\n").collect_vec()[0];
                     let tree = SimpleRootedTree::from_newick(tree_string.as_bytes())?;
                     if !tree.is_binary(){
-                        panic!("Input tree is not binary!");
+                        eprintln!("Input tree is not binary!");
+                        std::process::exit(exitcode::USAGE);
                     }
 
                     let tree_pd = TreePD::new(&tree);
