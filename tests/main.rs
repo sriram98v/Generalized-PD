@@ -1,15 +1,13 @@
 use phylo::prelude::*;
 use itertools::Itertools;
-use PD::pd::{TreePD, phylogenetic_diversity::{PhylogeneticDiversity, TreePDMap}};
+use PD::pd::{TreePD, phylogenetic_diversity::TreePDMap};
 
 #[test]
 fn pd() {
     let input_str: String = String::from("(((A:1,B:2):2,C:7):4,(D:1,E:2):5);");
     let tree = SimpleRootedTree::from_newick(input_str.as_bytes()).unwrap();
-    let mut tree_pd = TreePD::new(&tree);
+    let tree_pd = TreePD::new(&tree);
     let num_taxa = 2;
-
-    let tree_taxa = tree.get_taxa_space().collect_vec();
 
     dbg!(
         tree_pd.get_minPD(num_taxa.clone()),

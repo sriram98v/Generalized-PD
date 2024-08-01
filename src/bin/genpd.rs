@@ -8,7 +8,7 @@ use phylo::tree::simple_rtree::RootedMetaTree;
 use phylo::tree::SimpleRootedTree;
 use std::fs::File;
 use std::io::Read;
-use PD::pd::phylogenetic_diversity::{PhylogeneticDiversity, TreePDMap};
+use PD::pd::phylogenetic_diversity::TreePDMap;
 use PD::pd::TreePD;
 use anyhow::Result;
 
@@ -86,7 +86,7 @@ fn main() -> Result<()>{
                     if !tree.is_binary(){
                         panic!("Input tree is not binary!");
                     }
-                    let mut tree_pd = TreePD::new(&tree);
+                    let tree_pd = TreePD::new(&tree);
                     println!(
                         "minPD: {}\nnormalized minPD: {}\nminPD set:{}\nnormalized minPD set:{}",
                         tree_pd.get_minPD(num_taxa.clone()),
@@ -115,7 +115,7 @@ fn main() -> Result<()>{
                         panic!("Input tree is not binary!");
                     }
 
-                    let mut tree_pd = TreePD::new(&tree);
+                    let tree_pd = TreePD::new(&tree);
                     println!(
                         "maxPD: {}\nnormalized maxPD: {}\nmaxPD set:{}\nnormalized maxPD set:{}",
                         tree_pd.get_maxPD(num_taxa.clone()),
