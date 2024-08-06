@@ -86,8 +86,11 @@ fn main() -> Result<()>{
                     if !tree.is_binary(){
                         eprintln!("Input tree is not binary!");
                         std::process::exit(exitcode::USAGE);
-
                     }
+                    let num_taxa = match *num_taxa==0{
+                        true => {println!("setting k to n");tree.num_taxa()},
+                        false => *num_taxa as usize,
+                    };
                     let tree_pd = TreePD::new(&tree);
                     println!(
                         "minPD: {}\nnormalized minPD: {}\nminPD set:{}\nnormalized minPD set:{}",
@@ -107,7 +110,7 @@ fn main() -> Result<()>{
                 Some(("max", max_pd)) => {
                     let mut tree_file =
                         File::open(max_pd.get_one::<String>("file").expect("required"))?;
-                    let num_taxa = max_pd.get_one::<usize>("num_taxa").expect("required");
+                    let n_taxa = max_pd.get_one::<usize>("num_taxa").expect("required");
                     let mut trees = String::new();
 
                     tree_file.read_to_string(&mut trees).unwrap();
@@ -116,8 +119,11 @@ fn main() -> Result<()>{
                     if !tree.is_binary(){
                         eprintln!("Input tree is not binary!");
                         std::process::exit(exitcode::USAGE);
-
                     }
+                    let num_taxa = match *n_taxa==0{
+                        true => {println!("setting k to n");tree.num_taxa()},
+                        false => *n_taxa,
+                    };
 
                     let tree_pd = TreePD::new(&tree);
                     println!(
