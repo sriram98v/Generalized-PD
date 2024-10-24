@@ -14,7 +14,7 @@ rand = "0.8.5"
 indicatif = "0.17.8"
 clap = "4.5.7"
 anyhow = "1.0.86"
-phylo = "0.2.4"
+phylo = "0.3.1"
 exitcode = "1.1.2"
 
 [dev-dependencies]

@@ -34,7 +34,7 @@ impl<'a> TreePD<'a> {
         }
     }
 }
-impl<'a>  TreePDMap<'a> for TreePD<'a> {
+impl<'a> TreePDMap for TreePD<'a> {
 
     type Tree = SimpleRootedTree;
 
@@ -56,7 +56,7 @@ impl<'a>  TreePDMap<'a> for TreePD<'a> {
     fn get_minPD(
         &self,
         num_taxa: usize,
-    ) -> TreeNodeWeight<'a, SimpleRootedTree>
+    ) -> TreeNodeWeight<Self::Tree>
     {
         self.precomputed_min[self.tree.get_root_id()][min(num_taxa, self.tree.num_taxa())]
             .0
@@ -64,9 +64,9 @@ impl<'a>  TreePDMap<'a> for TreePD<'a> {
 
     fn get_minPD_node(
         &self,
-        node_id: TreeNodeID<'a, SimpleRootedTree>,
+        node_id: TreeNodeID<Self::Tree>,
         num_taxa: usize,
-    ) -> TreeNodeWeight<'a, SimpleRootedTree>
+    ) -> TreeNodeWeight<Self::Tree>
     {
         self.precomputed_min[node_id][min(num_taxa, self.tree.num_taxa())].0
     }
@@ -74,7 +74,7 @@ impl<'a>  TreePDMap<'a> for TreePD<'a> {
     fn get_norm_minPD(
         &self,
         num_taxa: usize,
-    ) -> TreeNodeWeight<'a, SimpleRootedTree>
+    ) -> TreeNodeWeight<Self::Tree>
     {
         self.precomputed_norm_min[self.tree.get_root_id()]
             [min(num_taxa, self.tree.num_taxa())]
@@ -84,7 +84,7 @@ impl<'a>  TreePDMap<'a> for TreePD<'a> {
     fn get_minPD_taxa_set(
         &self,
         num_taxa: usize,
-    ) -> impl Iterator<Item = TreeNodeID<'a, SimpleRootedTree>> {
+    ) -> impl Iterator<Item = TreeNodeID<Self::Tree>> {
         self.precomputed_min_set[self.tree.get_root_id()][num_taxa]
             .clone()
             .into_iter()
@@ -93,7 +93,7 @@ impl<'a>  TreePDMap<'a> for TreePD<'a> {
     fn get_norm_minPD_taxa_set(
         &self,
         num_taxa: usize,
-    ) -> impl Iterator<Item = TreeNodeID<'a, SimpleRootedTree>> {
+    ) -> impl Iterator<Item = TreeNodeID<Self::Tree>> {
         self.precomputed_norm_min_set[self.tree.get_root_id()][num_taxa]
             .clone()
             .into_iter()
@@ -101,7 +101,7 @@ impl<'a>  TreePDMap<'a> for TreePD<'a> {
 
     fn get_min_genPD(
         &self,
-    ) -> TreeNodeWeight<'a, SimpleRootedTree>
+    ) -> TreeNodeWeight<Self::Tree>
     {
         self.precomputed_norm_min[self.tree.get_root_id()]
             .iter()
@@ -113,7 +113,7 @@ impl<'a>  TreePDMap<'a> for TreePD<'a> {
 
     fn get_min_genPD_set(
         &self,
-    ) -> impl Iterator<Item = TreeNodeID<'a, SimpleRootedTree>> {
+    ) -> impl Iterator<Item = TreeNodeID<Self::Tree>> {
         let num_taxa = self.precomputed_norm_min[self.tree.get_root_id()]
             .iter()
             .enumerate()
@@ -129,7 +129,7 @@ impl<'a>  TreePDMap<'a> for TreePD<'a> {
     fn get_maxPD(
         &self,
         num_taxa: usize,
-    ) -> TreeNodeWeight<'a, SimpleRootedTree>
+    ) -> TreeNodeWeight<Self::Tree>
     {
         self.precomputed_max[self.tree.get_root_id()][max(num_taxa, 1)]
             .0
@@ -137,9 +137,9 @@ impl<'a>  TreePDMap<'a> for TreePD<'a> {
 
     fn get_maxPD_node(
         &self,
-        node_id: TreeNodeID<'a, SimpleRootedTree>,
+        node_id: TreeNodeID<Self::Tree>,
         num_taxa: usize,
-    ) -> TreeNodeWeight<'a, SimpleRootedTree>
+    ) -> TreeNodeWeight<Self::Tree>
     {
         self.precomputed_max[node_id][max(num_taxa, self.tree.num_taxa()-1)].0
     }
@@ -147,7 +147,7 @@ impl<'a>  TreePDMap<'a> for TreePD<'a> {
     fn get_norm_maxPD(
         &self,
         num_taxa: usize,
-    ) -> TreeNodeWeight<'a, SimpleRootedTree>
+    ) -> TreeNodeWeight<Self::Tree>
     {
         self.precomputed_norm_max[self.tree.get_root_id()]
             [max(num_taxa, self.tree.num_taxa()-1)]
@@ -157,7 +157,7 @@ impl<'a>  TreePDMap<'a> for TreePD<'a> {
     fn get_maxPD_taxa_set(
         &self,
         num_taxa: usize,
-    ) -> impl Iterator<Item = TreeNodeID<'a, SimpleRootedTree>> {
+    ) -> impl Iterator<Item = TreeNodeID<Self::Tree>> {
         self.precomputed_max_set[self.tree.get_root_id()][num_taxa]
             .clone()
             .into_iter()
@@ -166,7 +166,7 @@ impl<'a>  TreePDMap<'a> for TreePD<'a> {
     fn get_norm_maxPD_taxa_set(
         &self,
         num_taxa: usize,
-    ) -> impl Iterator<Item = TreeNodeID<'a, SimpleRootedTree>> {
+    ) -> impl Iterator<Item = TreeNodeID<Self::Tree>> {
         self.precomputed_norm_max_set[self.tree.get_root_id()][num_taxa]
             .clone()
             .into_iter()
@@ -174,7 +174,7 @@ impl<'a>  TreePDMap<'a> for TreePD<'a> {
 
     fn get_max_genPD(
         &self,
-    ) -> TreeNodeWeight<'a, SimpleRootedTree>
+    ) -> TreeNodeWeight<Self::Tree>
     {
         self.precomputed_norm_max[self.tree.get_root_id()]
             .iter()
@@ -186,7 +186,7 @@ impl<'a>  TreePDMap<'a> for TreePD<'a> {
 
     fn get_max_genPD_set(
         &self,
-    ) -> impl Iterator<Item = TreeNodeID<'a, SimpleRootedTree>> {
+    ) -> impl Iterator<Item = TreeNodeID<Self::Tree>> {
         let num_taxa = self.precomputed_norm_max[self.tree.get_root_id()]
             .iter()
             .enumerate()
@@ -203,14 +203,14 @@ impl<'a>  TreePDMap<'a> for TreePD<'a> {
 
 impl RootedPhylogeneticDiversity for SimpleRootedTree {
 
-    fn compute_dp_table<'a>(
+    fn compute_dp_table(
         &self,
         op: Ordering,
     ) -> (
         Vec<Vec<(f32, u32)>>,
-        Vec<Vec<Vec<TreeNodeID<'a, Self>>>>,
+        Vec<Vec<Vec<TreeNodeID<Self>>>>,
         Vec<Vec<(f32, u32)>>,
-        Vec<Vec<Vec<TreeNodeID<'a, Self>>>>,
+        Vec<Vec<Vec<TreeNodeID<Self>>>>,
     )
     {
         let op_fn = match op{
@@ -271,22 +271,24 @@ impl RootedPhylogeneticDiversity for SimpleRootedTree {
                     let x_cluster_size = self.get_cluster_size(x);
                     let y_cluster_size = self.get_cluster_size(y);
                     for (l,r) in binary_splits(i, x_cluster_size, y_cluster_size){
+                        let discount_l = self.get_node(y).unwrap().get_weight().is_some() as u32;
+                        let discount_r = self.get_node(x).unwrap().get_weight().is_some() as u32;
                         let val_bar: f32 = delta_bar[y][r].0
-                            + (self.get_node(y).unwrap().get_weight().unwrap()
+                            + (self.get_node(y).unwrap().get_weight().unwrap_or(0_f32)
                                 * (min(r, 1) as f32))
                             + delta_bar[x][l].0
-                            + (self.get_node(x).unwrap().get_weight().unwrap()
+                            + (self.get_node(x).unwrap().get_weight().unwrap_or(0_f32)
                                 * (min(l, 1) as f32));
                         let mut e = 0_u32;
                         let mut set: Vec<usize>;
                         if l == 0 {
-                            e += delta_bar[y][r].1 + 1;
+                            e += delta_bar[y][r].1 + discount_r;
                             set = delta_bar_sets[y][r].clone();
                         } else if r == 0 {
-                            e += delta_bar[x][l].1 + 1;
+                            e += delta_bar[x][l].1 + discount_l;
                             set = delta_bar_sets[x][l].clone();
                         } else {
-                            e += delta_bar[x][l].1 + delta_bar[y][r].1 + 2;
+                            e += delta_bar[x][l].1 + delta_bar[y][r].1 + discount_r +discount_l;
                             set = delta_bar_sets[x][l].clone();
                             set.extend(delta_bar_sets[y][r].clone());
                         }

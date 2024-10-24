@@ -8,7 +8,7 @@ use phylo::tree::simple_rtree::RootedMetaTree;
 use phylo::tree::SimpleRootedTree;
 use std::fs::File;
 use std::io::Read;
-use PD::pd::phylogenetic_diversity::TreePDMap;
+use PD::pd::phylogenetic_diversity::{binarize_tree, TreePDMap};
 use PD::pd::TreePD;
 use anyhow::Result;
 
@@ -82,10 +82,9 @@ fn main() -> Result<()>{
 
                     tree_file.read_to_string(&mut trees).unwrap();
                     let tree_string = trees.split("\n").collect_vec()[0];
-                    let tree = SimpleRootedTree::from_newick(tree_string.as_bytes())?;
+                    let mut tree = SimpleRootedTree::from_newick(tree_string.as_bytes())?;
                     if !tree.is_binary(){
-                        eprintln!("Input tree is not binary!");
-                        std::process::exit(exitcode::USAGE);
+                        binarize_tree(&mut tree);
                     }
                     let num_taxa = match *num_taxa==0{
                         true => {println!("setting k to n");tree.num_taxa()},
