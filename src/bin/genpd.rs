@@ -156,17 +156,31 @@ fn main() -> Result<()>{
                     if !tree.is_binary(){
                         binarize_tree(&mut tree);
                     }
-
+                    let num_taxa = tree.num_taxa();
                     let tree_pd = TreePD::new(&tree);
-                    println!(
-                        "minGenPD: {}\nminGenPD set: {}\nminGenPD set size: {}",
-                        tree_pd.get_min_genPD(),
-                        tree_pd
-                            .get_min_genPD_set()
-                            .map(|x| tree.get_node_taxa(x).unwrap())
-                            .join(","),
-                        tree_pd.get_min_genPD_set().collect_vec().len()
-                    );
+                    match num_taxa >=3{
+                        true => {
+                            println!(
+                                "minGenPD: {}\nminGenPD set: {}\nminGenPD set size: {}",
+                                tree_pd.get_min_genPD(),
+                                tree_pd
+                                    .get_min_genPD_set()
+                                    .map(|x| tree.get_node_taxa(x).unwrap())
+                                    .join(","),
+                                tree_pd.get_min_genPD_set().collect_vec().len()
+                            );
+        
+                        },
+                        false => {
+                            println!(
+                                "minGenPD: {}\nminGenPD set: {}\nminGenPD set size: {}",
+                                0,
+                                "",
+                                0
+                            );
+        
+                        }
+                    }
                     // dbg!("{}", tree);
                 },
                 Some(("max", max_pd)) => {
@@ -180,17 +194,32 @@ fn main() -> Result<()>{
                     if !tree.is_binary(){
                         binarize_tree(&mut tree);
                     }
-
+                    let num_taxa = tree.num_taxa();
                     let tree_pd = TreePD::new(&tree);
-                    println!(
-                        "maxGenPD: {}\nmaxGenPD set: {}\nmaxGenPD set size: {}",
-                        tree_pd.get_max_genPD(),
-                        tree_pd
-                            .get_max_genPD_set()
-                            .map(|x| tree.get_node_taxa(x).unwrap())
-                            .join(","),
-                        tree_pd.get_max_genPD_set().collect_vec().len()
-                    );
+                    match num_taxa >=3{
+                        true => {
+                            println!(
+                                "maxGenPD: {}\nmaxGenPD set: {}\nmaxGenPD set size: {}",
+                                tree_pd.get_max_genPD(),
+                                tree_pd
+                                    .get_max_genPD_set()
+                                    .map(|x| tree.get_node_taxa(x).unwrap())
+                                    .join(","),
+                                tree_pd.get_max_genPD_set().collect_vec().len()
+                            );
+                
+                        },
+                        false => {
+                            println!(
+                                "maxGenPD: {}\nmaxGenPD set: {}\nmaxGenPD set size: {}",
+                                0,
+                                "",
+                                0
+                            );
+        
+                        }
+                    }
+
                     // dbg!("{}", tree);
                 },
                 _ => println!("No valid PD metric chosen! Refer help page (-h flag)"),
