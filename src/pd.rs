@@ -105,10 +105,12 @@ impl<'a> TreePDMap for TreePD<'a> {
     {
         self.precomputed_norm_min[self.tree.get_root_id()]
             .iter()
-            .filter(|x| x.0 != 0_f32 && x.0 != f32::INFINITY)
-            .min_by(|x, y| x.0.total_cmp(&y.0))
+            .enumerate()
+            .filter(|(x,_)| *x > 2)
+            .filter(|(_, x)| x.0 != 0_f32 && x.0 != f32::INFINITY)
+            .min_by(|(_, x), (_, y)| x.0.total_cmp(&y.0))
             .unwrap()
-            .0
+            .1.0
     }
 
     fn get_min_genPD_set(
@@ -117,7 +119,7 @@ impl<'a> TreePDMap for TreePD<'a> {
         let num_taxa = self.precomputed_norm_min[self.tree.get_root_id()]
             .iter()
             .enumerate()
-            .filter(|x| x.1 .0 != 0_f32 && x.1 .0 != f32::INFINITY)
+            .filter(|x| x.0 > 2 && x.1.0 != 0_f32 && x.1 .0 != f32::INFINITY)
             .min_by(|x, y| x.1 .0.total_cmp(&y.1 .0))
             .unwrap()
             .0;
@@ -178,10 +180,12 @@ impl<'a> TreePDMap for TreePD<'a> {
     {
         self.precomputed_norm_max[self.tree.get_root_id()]
             .iter()
-            .filter(|x| x.0 != 0_f32 && x.0 != f32::INFINITY)
-            .max_by(|x, y| x.0.total_cmp(&y.0))
+            .enumerate()
+            .filter(|(x,_)| *x > 2)
+            .filter(|(_, x)| x.0 != 0_f32 && x.0 != f32::INFINITY)
+            .max_by(|(_, x), (_, y)| x.0.total_cmp(&y.0))
             .unwrap()
-            .0
+            .1.0
     }
 
     fn get_max_genPD_set(
@@ -190,7 +194,7 @@ impl<'a> TreePDMap for TreePD<'a> {
         let num_taxa = self.precomputed_norm_max[self.tree.get_root_id()]
             .iter()
             .enumerate()
-            .filter(|x| x.1 .0 != 0_f32 && x.1 .0 != f32::INFINITY)
+            .filter(|x| x.0 > 2 && x.1.0 != 0_f32 && x.1 .0 != f32::INFINITY)
             .max_by(|x, y| x.1 .0.total_cmp(&y.1 .0))
             .unwrap()
             .0;
@@ -282,10 +286,10 @@ impl RootedPhylogeneticDiversity for SimpleRootedTree {
                         let mut e = 0_u32;
                         let mut set: Vec<usize>;
                         if l == 0 {
-                            e += delta_bar[y][r].1 + discount_r;
+                            e += delta_bar[y][r].1;
                             set = delta_bar_sets[y][r].clone();
                         } else if r == 0 {
-                            e += delta_bar[x][l].1 + discount_l;
+                            e += delta_bar[x][l].1;
                             set = delta_bar_sets[x][l].clone();
                         } else {
                             e += delta_bar[x][l].1 + delta_bar[y][r].1 + discount_r +discount_l;
