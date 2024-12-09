@@ -32,7 +32,7 @@ Please refer the help page for details on how to use other path functions using:
 genpd PD min -h
 ```
 
-for max replace ```min``` with ```max``` in the above commands
+for max replace ```min``` with ```max``` in the above commands. To compute min/max PD for all values of k use the ```all_min```/```all_max``` command.
 
 ### Finding the min and max generalized PD
 To compute the minimum Generalized PD, please create a single file with the extension ```.tre``` containing the tree in Newick format. The run the following command to compute the Minimum Generalized PD:
