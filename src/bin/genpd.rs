@@ -6,6 +6,7 @@ use phylo::prelude::RootedTree;
 use phylo::tree::io::Newick;
 use phylo::tree::simple_rtree::RootedMetaTree;
 use phylo::tree::SimpleRootedTree;
+use std::cmp;
 use std::fs::File;
 use std::io::Read;
 use PD::pd::phylogenetic_diversity::{binarize_tree, TreePDMap};
@@ -114,7 +115,7 @@ fn main() -> Result<()>{
                     }
                     let num_taxa = match *num_taxa==0{
                         true => {println!("setting k to n");tree.num_taxa()},
-                        false => *num_taxa as usize,
+                        false => cmp::min(*num_taxa as usize, tree.num_taxa()),
                     };
                     let tree_pd = TreePD::new(&tree);
                     println!(
@@ -183,7 +184,7 @@ fn main() -> Result<()>{
                     }
                     let num_taxa = match *n_taxa==0{
                         true => {println!("setting k to n");tree.num_taxa()},
-                        false => *n_taxa,
+                        false => cmp::min(*n_taxa, tree.num_taxa()),
                     };
 
                     let tree_pd = TreePD::new(&tree);
