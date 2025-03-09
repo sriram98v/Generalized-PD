@@ -81,6 +81,11 @@ where
         &self,
     ) -> impl Iterator<Item = TreeNodeID<Self::Tree>>;
 
+    fn get_avgPD(
+        &self,
+        num_taxa: usize,
+    ) -> TreeNodeWeight<Self::Tree>;
+
 }
 
 pub trait RootedPhylogeneticDiversity: RootedWeightedTree + Clusters
@@ -118,6 +123,10 @@ where
     ) {
         self.compute_dp_table(Ordering::Greater)
     }
+
+    fn compute_avg(
+        &self,
+    ) -> Vec<Vec<TreeNodeWeight<Self>>>;
 }
 
 pub trait UnrootedPhylogeneticDiversity: RootedWeightedTree + Clusters
@@ -166,8 +175,23 @@ pub fn binary_splits(k: usize, u1_max: usize, u2_max: usize)->impl Iterator<Item
     out_vec.into_iter()
 }
 
+/// Precompute binomial terms with pascal triangle
+pub fn pascal_triangle(norm: u32)->Vec<Vec<u32>>{
+    let mut pt = vec![vec![0;norm as usize+1]; norm as usize+1];
+    pt[0][0]=1;
+    for n in 1..norm as usize+1{
+        pt[n][0] = 1;
+        pt[n][n] = 1;
+        for k in 1..n{
+            let n_choose_k = pt[n-1][k-1]+pt[n-1][k];
+            pt[n][k] = n_choose_k;
+        }
+    }
+    pt
+}
+
 /// Arbitrarily binarize a non-binary tree
-pub fn binarize_tree(tree: &mut SimpleRootedTree){
+pub fn binarize_tree(tree: &mut PhyloTree){
     let mut stack = tree.postord_ids(tree.get_root_id()).collect::<VecDeque<_>>();
     loop{
         let n_id=stack.pop_front();

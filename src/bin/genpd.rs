@@ -5,7 +5,7 @@ use itertools::Itertools;
 use phylo::prelude::RootedTree;
 use phylo::tree::io::Newick;
 use phylo::tree::simple_rtree::RootedMetaTree;
-use phylo::tree::SimpleRootedTree;
+use phylo::tree::{PhyloTree, SimpleRootedTree};
 use std::cmp;
 use std::fs::File;
 use std::io::Read;
@@ -65,7 +65,30 @@ fn main() -> Result<()>{
                                 .required(true)
                                 .value_parser(clap::value_parser!(String)),
                         )
-                ),
+                )
+                .subcommand(
+                    Command::new("avg")
+                        .about("Compute avgPD")
+                        .arg(
+                            arg!(-f --file <TREE_FILE> "Input Tree File")
+                                .required(true)
+                                .value_parser(clap::value_parser!(String)),
+                        )
+                        .arg(
+                            arg!(-n --num_taxa <NUM_TAXA> "Input Tree File")
+                                .required(true)
+                                .value_parser(clap::value_parser!(usize)),
+                        )
+                )
+                .subcommand(
+                    Command::new("all_avg")
+                        .about("Compute all avgPD")
+                        .arg(
+                            arg!(-f --file <TREE_FILE> "Input Tree File")
+                                .required(true)
+                                .value_parser(clap::value_parser!(String)),
+                        )        
+                )
 
         )
         .subcommand(
@@ -109,7 +132,7 @@ fn main() -> Result<()>{
 
                     tree_file.read_to_string(&mut trees).unwrap();
                     let tree_string = trees.split("\n").collect_vec()[0];
-                    let mut tree = SimpleRootedTree::from_newick(tree_string.as_bytes())?;
+                    let mut tree = PhyloTree::from_newick(tree_string.as_bytes())?;
                     if !tree.is_binary(){
                         binarize_tree(&mut tree);
                     }
@@ -203,6 +226,30 @@ fn main() -> Result<()>{
                     );
                     // dbg!("{}", tree);
                 },
+                Some(("avg", max_pd)) => {
+                    let mut tree_file =
+                        File::open(max_pd.get_one::<String>("file").expect("required"))?;
+                    let n_taxa = max_pd.get_one::<usize>("num_taxa").expect("required");
+                    let mut trees = String::new();
+
+                    tree_file.read_to_string(&mut trees).unwrap();
+                    let tree_string = trees.split("\n").collect_vec()[0];
+                    let mut tree = SimpleRootedTree::from_newick(tree_string.as_bytes())?;
+                    if !tree.is_binary(){
+                        binarize_tree(&mut tree);
+                    }
+                    let num_taxa = match *n_taxa==0{
+                        true => {println!("setting k to n");tree.num_taxa()},
+                        false => cmp::min(*n_taxa, tree.num_taxa()),
+                    };
+
+                    let tree_pd = TreePD::new(&tree);
+                    println!(
+                        "avgPD: {}",
+                        tree_pd.get_maxPD(num_taxa.clone()),
+                    );
+                    // dbg!("{}", tree);
+                },
                 Some(("all_max", max_pd)) => {
                     let mut tree_file =
                         File::open(max_pd.get_one::<String>("file").expect("required"))?;
@@ -215,11 +262,6 @@ fn main() -> Result<()>{
                     if !tree.is_binary(){
                         binarize_tree(&mut tree);
                     }
-                    // let num_taxa = match *n_taxa==0{
-                    //     true => {println!("setting k to n");tree.num_taxa()},
-                    //     false => *n_taxa,
-                    // };
-
                     let tree_taxa: usize = tree.num_taxa();
 
                     let tree_pd = TreePD::new(&tree);
@@ -239,7 +281,29 @@ fn main() -> Result<()>{
                                 .join(",")
                         );
                     }
-                    // dbg!("{}", tree);
+                },
+                Some(("all_avg", max_pd)) => {
+                    let mut tree_file =
+                        File::open(max_pd.get_one::<String>("file").expect("required"))?;
+                    // let n_taxa = max_pd.get_one::<usize>("num_taxa").expect("required");
+                    let mut trees = String::new();
+
+                    tree_file.read_to_string(&mut trees).unwrap();
+                    let tree_string = trees.split("\n").collect_vec()[0];
+                    let mut tree = SimpleRootedTree::from_newick(tree_string.as_bytes())?;
+                    if !tree.is_binary(){
+                        binarize_tree(&mut tree);
+                    }
+                    let tree_taxa: usize = tree.num_taxa();
+
+                    let tree_pd = TreePD::new(&tree);
+                    for num_taxa in 3..tree_taxa+1{
+                        println!(
+                            "k: {}\navgPD: {}",
+                            num_taxa,
+                            tree_pd.get_avgPD(num_taxa.clone()),
+                        );
+                    }
                 },
 
                 _ => println!("No valid PD metric chosen! Refer help page (-h flag)"),

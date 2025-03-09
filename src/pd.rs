@@ -3,24 +3,27 @@ use crate::pd::phylogenetic_diversity::{RootedPhylogeneticDiversity, TreePDMap, 
 use itertools::Itertools;
 use phylo::prelude::*;
 use phylo::tree::SimpleRootedTree;
+use phylogenetic_diversity::pascal_triangle;
 use std::cmp::{Ordering, min, max};
 
-pub struct TreePD<'a> {
-    tree: &'a SimpleRootedTree,
-    precomputed_min: Vec<Vec<(f32, u32)>>,
+pub struct TreePD<'a,T:NodeTaxa,W:EdgeWeight,Z:NodeWeight> {
+    tree: &'a SimpleRootedTree<T,W,Z>,
+    precomputed_min: Vec<Vec<(W, u32)>>,
     precomputed_min_set: Vec<Vec<Vec<usize>>>,
-    precomputed_norm_min: Vec<Vec<(f32, u32)>>,
+    precomputed_norm_min: Vec<Vec<(W, u32)>>,
     precomputed_norm_min_set: Vec<Vec<Vec<usize>>>,
-    precomputed_max: Vec<Vec<(f32, u32)>>,
+    precomputed_max: Vec<Vec<(W, u32)>>,
     precomputed_max_set: Vec<Vec<Vec<usize>>>,
-    precomputed_norm_max: Vec<Vec<(f32, u32)>>,
+    precomputed_norm_max: Vec<Vec<(W, u32)>>,
     precomputed_norm_max_set: Vec<Vec<Vec<usize>>>,
+    precomputed_avg: Vec<Vec<W>>,
 }
 
-impl<'a> TreePD<'a> {
-    pub fn new(tree: &'a SimpleRootedTree) -> Self {
+impl<'a,T:NodeTaxa,W:EdgeWeight,Z:NodeWeight> TreePD<'a,T,W,Z> {
+    pub fn new(tree: &'a SimpleRootedTree<T,W,Z>) -> Self {
         let (min, min_set, min_norm, min_norm_set) = tree.compute_norm_min();
         let (max, max_set, max_norm, max_norm_set) = tree.compute_norm_max();
+        let avg = tree.compute_avg();
         TreePD {
             tree,
             precomputed_min: min,
@@ -31,12 +34,13 @@ impl<'a> TreePD<'a> {
             precomputed_max_set: max_set,
             precomputed_norm_max: max_norm,
             precomputed_norm_max_set: max_norm_set,
+            precomputed_avg: avg,
         }
     }
 }
-impl<'a> TreePDMap for TreePD<'a> {
+impl<'a,T:NodeTaxa,W:EdgeWeight,Z:NodeWeight> TreePDMap for TreePD<'a,T,W,Z> {
 
-    type Tree = SimpleRootedTree;
+    type Tree = SimpleRootedTree<T,W,Z>;
 
     fn reset(&mut self) {
         self.precomputed_min = Vec::new();
@@ -107,8 +111,8 @@ impl<'a> TreePDMap for TreePD<'a> {
             .iter()
             .enumerate()
             .filter(|(x,_)| *x > 2)
-            .filter(|(_, x)| x.0 != 0_f32 && x.0 != f32::INFINITY)
-            .min_by(|(_, x), (_, y)| x.0.total_cmp(&y.0))
+            .filter(|(_, x)| x.0 != W::zero() && x.0 != W::infinity())
+            .min_by(|(_, x), (_, y)| x.0.partial_cmp(&y.0).unwrap())
             .unwrap()
             .1.0
     }
@@ -119,8 +123,8 @@ impl<'a> TreePDMap for TreePD<'a> {
         let num_taxa = self.precomputed_norm_min[self.tree.get_root_id()]
             .iter()
             .enumerate()
-            .filter(|x| x.0 > 2 && x.1.0 != 0_f32 && x.1 .0 != f32::INFINITY)
-            .min_by(|x, y| x.1 .0.total_cmp(&y.1 .0))
+            .filter(|x| x.0 > 2 && x.1.0 != W::zero() && x.1 .0 != W::infinity())
+            .min_by(|x, y| x.1 .0.partial_cmp(&y.1 .0).unwrap())
             .unwrap()
             .0;
         self.precomputed_norm_min_set[self.tree.get_root_id()][num_taxa]
@@ -182,8 +186,8 @@ impl<'a> TreePDMap for TreePD<'a> {
             .iter()
             .enumerate()
             .filter(|(x,_)| *x > 2)
-            .filter(|(_, x)| x.0 != 0_f32 && x.0 != f32::INFINITY)
-            .max_by(|(_, x), (_, y)| x.0.total_cmp(&y.0))
+            .filter(|(_, x)| x.0 != W::zero() && x.0 != W::infinity())
+            .max_by(|(_, x), (_, y)| x.0.partial_cmp(&y.0).unwrap())
             .unwrap()
             .1.0
     }
@@ -194,8 +198,8 @@ impl<'a> TreePDMap for TreePD<'a> {
         let num_taxa = self.precomputed_norm_max[self.tree.get_root_id()]
             .iter()
             .enumerate()
-            .filter(|x| x.0 > 2 && x.1.0 != 0_f32 && x.1 .0 != f32::INFINITY)
-            .max_by(|x, y| x.1 .0.total_cmp(&y.1 .0))
+            .filter(|x| x.0 > 2 && x.1.0 != W::zero() && x.1 .0 != W::infinity())
+            .max_by(|x, y| x.1 .0.partial_cmp(&y.1 .0).unwrap())
             .unwrap()
             .0;
         self.precomputed_norm_max_set[self.tree.get_root_id()][num_taxa]
@@ -203,17 +207,24 @@ impl<'a> TreePDMap for TreePD<'a> {
             .into_iter()
     }
 
+    fn get_avgPD(
+            &self,
+            num_taxa: usize,
+        ) -> TreeNodeWeight<Self::Tree> {
+        self.precomputed_avg[self.tree.get_root_id()][num_taxa]
+    }
+
 }
 
-impl RootedPhylogeneticDiversity for SimpleRootedTree {
+impl<T:NodeTaxa,W:EdgeWeight,Z:NodeWeight> RootedPhylogeneticDiversity for SimpleRootedTree<T,W,Z> {
 
     fn compute_dp_table(
         &self,
         op: Ordering,
     ) -> (
-        Vec<Vec<(f32, u32)>>,
+        Vec<Vec<(W, u32)>>,
         Vec<Vec<Vec<TreeNodeID<Self>>>>,
-        Vec<Vec<(f32, u32)>>,
+        Vec<Vec<(W, u32)>>,
         Vec<Vec<Vec<TreeNodeID<Self>>>>,
     )
     {
@@ -223,26 +234,26 @@ impl RootedPhylogeneticDiversity for SimpleRootedTree {
         };
 
         let start_val = match op{
-            Ordering::Greater => f32::MIN,
-            _ => f32::INFINITY,
+            Ordering::Greater => W::min_value(),
+            _ => W::infinity(),
         };
 
         let num_leaves = self.get_leaves().len();
-        let mut delta_bar: Vec<Vec<(f32, u32)>> =
+        let mut delta_bar: Vec<Vec<(W, u32)>> =
             vec![vec![(start_val, 0_u32); num_leaves + 1]; self.get_nodes().len()];
         let mut delta_bar_sets: Vec<Vec<Vec<usize>>> =
             vec![vec![vec![]; num_leaves + 1]; self.get_nodes().len()];
-        let mut delta_hat: Vec<Vec<(f32, u32)>> =
+        let mut delta_hat: Vec<Vec<(W, u32)>> =
             vec![vec![(start_val, 0_u32); num_leaves + 1]; self.get_nodes().len()];
         let mut delta_hat_sets: Vec<Vec<Vec<usize>>> =
             vec![vec![vec![]; num_leaves + 1]; self.get_nodes().len()];
 
         for node_id in self.get_node_ids() {
-            delta_bar[node_id][0] = (0_f32, 0_u32);
-            delta_hat[node_id][0] = (0_f32, 0_u32);
+            delta_bar[node_id][0] = (W::zero(), 0_u32);
+            delta_hat[node_id][0] = (W::zero(), 0_u32);
             if self.is_leaf(node_id){
-                delta_bar[node_id][1] = (0_f32, 0_u32);
-                delta_hat[node_id][1] = (0_f32, 0_u32);
+                delta_bar[node_id][1] = (W::zero(), 0_u32);
+                delta_hat[node_id][1] = (W::zero(), 0_u32);
                 delta_bar_sets[node_id][1] = vec![node_id];
                 delta_hat_sets[node_id][1] = vec![node_id];
             }
@@ -254,12 +265,12 @@ impl RootedPhylogeneticDiversity for SimpleRootedTree {
                 {
                     // Min pd
                     let mut min_bar = match op{
-                        Ordering::Greater => f32::MIN,
-                        _ => f32::MAX,
+                        Ordering::Greater => W::min_value(),
+                        _ => W::max_value(),
                     };
                     let mut min_hat = match op{
-                        Ordering::Greater => f32::MIN,
-                        _ => f32::MAX,
+                        Ordering::Greater => W::min_value(),
+                        _ => W::max_value(),
                     };
                     // min pd set
                     let mut min_bar_set: Vec<usize> = vec![];
@@ -277,12 +288,11 @@ impl RootedPhylogeneticDiversity for SimpleRootedTree {
                     for (l,r) in binary_splits(i, x_cluster_size, y_cluster_size){
                         let discount_l = self.get_node(y).unwrap().get_weight().is_some() as u32;
                         let discount_r = self.get_node(x).unwrap().get_weight().is_some() as u32;
-                        let val_bar: f32 = delta_bar[y][r].0
-                            + (self.get_node(y).unwrap().get_weight().unwrap_or(0_f32)
-                                * (min(r, 1) as f32))
+                        let val_bar: W = delta_bar[y][r].0
+                            + (self.get_node(y).unwrap().get_weight().unwrap_or(W::zero())*W::from(min(r, 1)).unwrap())
                             + delta_bar[x][l].0
-                            + (self.get_node(x).unwrap().get_weight().unwrap_or(0_f32)
-                                * (min(l, 1) as f32));
+                            + (self.get_node(x).unwrap().get_weight().unwrap_or(W::zero())
+                                * W::from(min(l, 1)).unwrap());
                         let mut e = 0_u32;
                         let mut set: Vec<usize>;
                         if l == 0 {
@@ -296,7 +306,7 @@ impl RootedPhylogeneticDiversity for SimpleRootedTree {
                             set = delta_bar_sets[x][l].clone();
                             set.extend(delta_bar_sets[y][r].clone());
                         }
-                        let val_hat = val_bar / (e as f32);
+                        let val_hat = val_bar / W::from(e).unwrap();
                         if op_fn(&val_bar, &min_bar) {
                             min_bar = val_bar;
                             min_e_bar = e;
@@ -317,6 +327,55 @@ impl RootedPhylogeneticDiversity for SimpleRootedTree {
         }
 
         (delta_bar, delta_bar_sets, delta_hat, delta_hat_sets)
+    }
+
+    fn compute_avg(
+            &self,
+        ) -> Vec<Vec<TreeNodeWeight<Self>>> {
+        let num_leaves = self.num_taxa();
+        let pascal = pascal_triangle(num_leaves as u32);
+        let mut alpha = vec![vec![W::zero(); num_leaves + 1]; self.get_nodes().len()];
+        let mut beta = vec![vec![W::zero(); num_leaves + 1]; self.get_nodes().len()];
+
+        for node_id in self.postord_ids(self.get_root_id()){
+            match self.is_leaf(node_id) {
+                true => {
+                    alpha[node_id][1] = W::zero();
+                    beta[node_id][1] = W::zero();
+                },
+                _ => {
+                    let node_children = self.get_node_children_ids(node_id).collect_vec();
+                    let x = node_children[0];
+                    let y = node_children[1];
+                    let x_cluster_size = self.get_cluster_size(x);
+                    let y_cluster_size = self.get_cluster_size(y);
+                    let w_x = self.get_node(x).unwrap().get_weight().unwrap();
+                    let w_y = self.get_node(y).unwrap().get_weight().unwrap();                    
+                    for i in 1..(min(num_leaves, self.get_cluster_size(node_id)) + 1){
+                        dbg!(x_cluster_size, i, pascal[x_cluster_size][i]);
+                        let s_x = beta[x][i] + W::from(pascal[x_cluster_size][i]).unwrap()*w_x;
+                        let s_y = beta[y][i] + W::from(pascal[y_cluster_size][i]).unwrap()*w_y;
+                        dbg!(s_x, s_y);
+                        let mut s = s_x + s_y;
+                        dbg!((i, x_cluster_size, y_cluster_size));
+                        for r in max(1,i as isize-y_cluster_size as isize)..min(x_cluster_size as isize,i as isize-1)+1{
+                            let l = (i as isize-r) as usize;
+                            dbg!((i,l,r));
+                            dbg!(s);
+                            s = s + W::from(pascal[y_cluster_size][l]).unwrap()*beta[x][r as usize]
+                                + W::from(pascal[x_cluster_size][r as usize]).unwrap()*beta[y][l]
+                                + W::from(pascal[y_cluster_size][l]).unwrap()*W::from(pascal[x_cluster_size][r as usize]).unwrap()*(w_x+w_y);
+                            dbg!(s);
+                        }
+                        dbg!((node_id, i, s, s/W::from(pascal[x_cluster_size+y_cluster_size][i]).unwrap()));
+                        beta[node_id][i] = s;
+                        alpha[node_id][i] = s/W::from(pascal[x_cluster_size+y_cluster_size][i]).unwrap();
+                    }
+                },
+            };
+        }
+        dbg!(beta[self.get_root_id()][2]);
+        alpha
     }
 
 }
