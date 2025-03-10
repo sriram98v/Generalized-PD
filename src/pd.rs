@@ -352,29 +352,21 @@ impl<T:NodeTaxa,W:EdgeWeight,Z:NodeWeight> RootedPhylogeneticDiversity for Simpl
                     let w_x = self.get_node(x).unwrap().get_weight().unwrap();
                     let w_y = self.get_node(y).unwrap().get_weight().unwrap();                    
                     for i in 1..(min(num_leaves, self.get_cluster_size(node_id)) + 1){
-                        dbg!(x_cluster_size, i, pascal[x_cluster_size][i]);
                         let s_x = beta[x][i] + W::from(pascal[x_cluster_size][i]).unwrap()*w_x;
                         let s_y = beta[y][i] + W::from(pascal[y_cluster_size][i]).unwrap()*w_y;
-                        dbg!(s_x, s_y);
                         let mut s = s_x + s_y;
-                        dbg!((i, x_cluster_size, y_cluster_size));
                         for r in max(1,i as isize-y_cluster_size as isize)..min(x_cluster_size as isize,i as isize-1)+1{
                             let l = (i as isize-r) as usize;
-                            dbg!((i,l,r));
-                            dbg!(s);
                             s = s + W::from(pascal[y_cluster_size][l]).unwrap()*beta[x][r as usize]
                                 + W::from(pascal[x_cluster_size][r as usize]).unwrap()*beta[y][l]
                                 + W::from(pascal[y_cluster_size][l]).unwrap()*W::from(pascal[x_cluster_size][r as usize]).unwrap()*(w_x+w_y);
-                            dbg!(s);
                         }
-                        dbg!((node_id, i, s, s/W::from(pascal[x_cluster_size+y_cluster_size][i]).unwrap()));
                         beta[node_id][i] = s;
                         alpha[node_id][i] = s/W::from(pascal[x_cluster_size+y_cluster_size][i]).unwrap();
                     }
                 },
             };
         }
-        dbg!(beta[self.get_root_id()][2]);
         alpha
     }
 
