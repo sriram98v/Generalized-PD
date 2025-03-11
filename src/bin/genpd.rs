@@ -246,7 +246,7 @@ fn main() -> Result<()>{
                     let tree_pd = TreePD::new(&tree);
                     println!(
                         "avgPD: {}",
-                        tree_pd.get_maxPD(num_taxa.clone()),
+                        tree_pd.get_avgPD(num_taxa.clone()),
                     );
                     // dbg!("{}", tree);
                 },
