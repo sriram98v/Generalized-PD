@@ -349,8 +349,8 @@ impl<T:NodeTaxa,W:EdgeWeight,Z:NodeWeight> RootedPhylogeneticDiversity for Simpl
                     let y = node_children[1];
                     let x_cluster_size = self.get_cluster_size(x);
                     let y_cluster_size = self.get_cluster_size(y);
-                    let w_x = self.get_node(x).unwrap().get_weight().unwrap();
-                    let w_y = self.get_node(y).unwrap().get_weight().unwrap();                    
+                    let w_x = self.get_node(x).unwrap().get_weight().unwrap_or(W::zero());
+                    let w_y = self.get_node(y).unwrap().get_weight().unwrap_or(W::zero());
                     for i in 1..(min(num_leaves, self.get_cluster_size(node_id)) + 1){
                         let s_x = beta[x][i] + W::from(pascal[x_cluster_size][i]).unwrap()*w_x;
                         let s_y = beta[y][i] + W::from(pascal[y_cluster_size][i]).unwrap()*w_y;
